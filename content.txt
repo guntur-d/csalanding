@@ -1,0 +1,33 @@
+i need you to create a static marketing website for a real estate company names Chandra Satria Agung (see @Company Profile CSA Ver.Jan.2025-1.pdf on root folder)
+
+
+
+This page should at least have the following sections:
+
+About us:
+Projects:
+Contact us:
+
+
+The active project right now is Rajapolah. 
+
+Rajapolah narration and video links:
+
+narration
+
+https://rumaindo.com/iklan/rumah-asri-rajapolah-tasikmalaya-1762847384
+
+
+
+video links:
+
+https://www.youtube.com/watch?v=n2FyZwVvAX4
+
+https://www.youtube.com/watch?v=VWRlFTw6QfI
+
+https://www.youtube.com/watch?v=j2OxFmVgyGo
+
+https://www.youtube.com/watch?v=9F3Jc5Xe4w8
+
+Rajapolah images are all png and jpg format in root folder
+

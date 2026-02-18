@@ -1,0 +1,11 @@
+{
+  "name": "csa-marketing-website",
+  "version": "1.0.0",
+  "description": "Marketing website for Chandra Satria Agung",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  }
+}
