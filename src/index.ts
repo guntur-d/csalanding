@@ -1,12 +1,21 @@
 import 'fastify';
-import { createApp, registerRoutes } from '@moriajs/core';
+import { createApp } from '@moriajs/core';
 import { createDatabasePlugin } from '@moriajs/db';
 import { createAuthPlugin } from '@moriajs/auth';
+import { renderToString } from '@moriajs/renderer';
 import config from '../moria.config.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import fastifyStatic from '@fastify/static';
+
+// Static Route Imports for Vercel Bundling
+import * as HomeRoute from './routes/index.js';
+import * as AdminRoute from './routes/admin/index.js';
+import * as AdminLoginRoute from './routes/admin/login.js';
+import AdminMiddleware from './routes/admin/_middleware.js';
+import * as ContentApi from './routes/api/content.js';
+import * as AuthLoginApi from './routes/api/auth/login.js';
 
 // Fix for dependencies missed by Vercel NFT bundler
 import 'mithril-node-render';
@@ -156,32 +165,46 @@ export async function initApp() {
                 return payload;
             });
 
-            // 5. Plugins & Routes
+            // 5. Plugins & MANUEL Route Registration (Bypassing filesystem scanner for Vercel)
             try {
                 if (config.database) await app.use(createDatabasePlugin(config.database as any));
                 if (config.auth) await app.use(createAuthPlugin({ ...config.auth, secret: config.auth.secret || 'dev-secret-key-csa' } as any));
             } catch (e) { console.error('[Vercel] Plugin failure:', e); }
 
-            const searchPaths = [
-                path.resolve(projectRoot, config.routes?.dir ?? 'src/routes'),
-                path.resolve(projectRoot, 'src/routes'),
-                path.resolve(projectRoot, 'src/routes/pages'), // Explicitly register pages root for /admin, / etc.
-                path.resolve(__dirname, 'routes'),
-                path.resolve(__dirname, '..', 'src', 'routes')
-            ];
+            // Helper for registering Mithril Pages
+            const registerPage = (path: string, componentModule: any, middleware?: any) => {
+                console.log(`[Vercel] Registering Manual Route: ${path}`);
+                const handler = async (req: any, reply: any) => {
+                    const data = componentModule.getServerData ? await componentModule.getServerData(req) : {};
+                    const html = await renderToString(componentModule.default, {
+                        title: componentModule.default.title || 'CSA Marketing',
+                        mode: isProd ? 'production' : 'development',
+                        initialData: {
+                            ...data,
+                            _moria_page: path // Critical for client hydration
+                        }
+                    });
+                    reply.type('text/html').send(html);
+                };
 
-            let routesRegistered = false;
-            let lastError: any = null;
-            for (const routesDir of searchPaths) {
-                if (fs.existsSync(routesDir)) {
-                    console.log(`[Vercel] Registering routes from: ${routesDir}`);
-                    try {
-                        await registerRoutes(app.server, routesDir, { mode: isProd ? 'production' : 'development', config, vite: undefined });
-                        routesRegistered = true;
-                        break;
-                    } catch (e) { lastError = e; console.error('[Vercel] Registration error:', e); }
+                if (middleware) {
+                    app.server.get(path, { preHandler: middleware }, handler);
+                } else {
+                    app.server.get(path, handler);
                 }
-            }
+            };
+
+            // Register Pages
+            registerPage('/', HomeRoute);
+            registerPage('/admin', AdminRoute, AdminMiddleware);
+            registerPage('/admin/login', AdminLoginRoute);
+
+            // Register API
+            console.log('[Vercel] Registering Manual API Routes');
+            app.server.get('/api/content', ContentApi.GET);
+            app.server.post('/api/content', ContentApi.POST);
+            app.server.post('/api/auth/login', AuthLoginApi.POST);
+
 
             // Diagnostic route
             app.server.get('/vercel-debug', async () => {
@@ -200,15 +223,10 @@ export async function initApp() {
                     isProd,
                     cwd: process.cwd(),
                     contentDir,
-                    assetsDir,
-                    discoveredAssets,
-                    routesRegistered,
-                    lastError: lastError ? lastError.message : null,
+                    routesRegistered: 'MANUAL',
                     fs: {
                         root: listFiles(projectRoot),
                         dist: listFiles(path.join(projectRoot, 'dist')),
-                        client: listFiles(path.join(projectRoot, 'dist/client')),
-                        public: listFiles(publicDir)
                     },
                     routes: app.server.printRoutes()
                 };
