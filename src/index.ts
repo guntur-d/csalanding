@@ -43,7 +43,6 @@ export async function initApp() {
         });
 
         // 1. Static File Serving (Bridge for Vercel/Local consistency)
-        // Combine multiple roots into a single registration to avoid route collisions (e.g. HEAD /*)
         const staticRoots: string[] = [];
         const publicDir = path.resolve(projectRoot, 'public');
         if (fs.existsSync(publicDir)) {
@@ -63,12 +62,26 @@ export async function initApp() {
             });
         }
 
-        // 2. CSP Relaxation & Asset Injection Hook
-        app.server.addHook('onRequest', async (req, reply) => {
-            // Log for debugging
-            if (req.url.includes('.css') || req.url.includes('.js') || req.url.includes('.jpg') || req.url.includes('.png')) {
-                console.log(`[Vercel] Asset Request: ${req.method} ${req.url}`);
+        // 2. Discover correctly hashed assets from dist/client/index.html
+        let productionAssets = '';
+        if (isProd) {
+            const indexHtmlPath = path.join(clientDir, 'index.html');
+            if (fs.existsSync(indexHtmlPath)) {
+                try {
+                    const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+                    // Extract <script> and <link> tags from the <head>
+                    const scriptMatches = indexHtml.match(/<script[^>]+src="\/assets\/[^"]+"[^>]*><\/script>/g) || [];
+                    const linkMatches = indexHtml.match(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/g) || [];
+                    productionAssets = [...scriptMatches, ...linkMatches].join('\n    ');
+                    console.log(`[Vercel] Discovered production assets:\n${productionAssets}`);
+                } catch (e) {
+                    console.error('[Vercel] Failed to read dist/client/index.html for asset discovery', e);
+                }
             }
+        }
+
+        // 3. CSP & Asset Injection Hook
+        app.server.addHook('onRequest', async (req, reply) => {
             reply.removeHeader('Content-Security-Policy');
         });
 
@@ -88,32 +101,33 @@ export async function initApp() {
             if (typeof payload === 'string' && payload.includes('<head>')) {
                 let processedPayload = payload;
 
-                // 1. Absolute styles.css injection
-                if (!processedPayload.includes('styles.css')) {
-                    processedPayload = processedPayload.replace('<head>', '<head>\n    <link rel="stylesheet" href="/styles.css">');
-                }
-
-                // 2. Cleanup and Absolute Hashed Entry Injection
-                // Remove ANY script that looks like entry-client (Moria default)
+                // A. Cleanup broken Moria defaults
                 processedPayload = processedPayload.replace(/<script[^>]+src="[^"]*entry-client\.js"[^>]*><\/script>/g, '');
+                processedPayload = processedPayload.replace(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/g, (match) => {
+                    // Only remove if we have discovered production assets to replace them with
+                    return productionAssets ? '' : match;
+                });
 
-                const assetsDir = path.join(clientDir, 'assets');
-                if (fs.existsSync(assetsDir)) {
-                    const files = fs.readdirSync(assetsDir);
-                    const entryFile = files.find(f => f.startsWith('index-') && f.endsWith('.js'));
-                    if (entryFile) {
-                        const entryPath = `/assets/${entryFile}`;
-                        console.log(`[Vercel] Injecting script: ${entryPath}`);
-                        processedPayload = processedPayload.replace('<head>', `<head>\n    <script type="module" src="${entryPath}"></script>`);
-                    }
+                // B. Inject discovered assets or fallback
+                let headInjection = '';
+                if (productionAssets) {
+                    headInjection += `    ${productionAssets}\n`;
                 }
 
+                // C. Ensure styles.css from public is also included if missing
+                if (!processedPayload.includes('styles.css') && fs.existsSync(path.join(publicDir, 'styles.css'))) {
+                    headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
+                }
+
+                if (headInjection) {
+                    processedPayload = processedPayload.replace('<head>', '<head>\n' + headInjection);
+                }
                 return processedPayload;
             }
             return payload;
         });
 
-        // 3. Manually register plugins
+        // 4. Manually register plugins
         if (config.database) {
             console.log('[Vercel] Registering @moriajs/db');
             await app.use(createDatabasePlugin(config.database as any));
@@ -126,7 +140,7 @@ export async function initApp() {
             } as any));
         }
 
-        // 4. Robust Route Registration
+        // 5. Robust Route Registration
         const searchPaths = [
             path.resolve(projectRoot, config.routes?.dir ?? 'src/routes'),
             path.resolve(__dirname, 'routes'),
@@ -154,7 +168,7 @@ export async function initApp() {
                 isProd,
                 cwd: process.cwd(),
                 dirname: __dirname,
-                searchPaths,
+                productionAssets,
                 foundRoutes,
                 routes: app.server.printRoutes()
             };
