@@ -2,11 +2,7 @@
     "version": 2,
     "rewrites": [
         {
-            "source": "/assets/(.*)",
-            "destination": "/dist/client/assets/$1"
-        },
-        {
-            "source": "/((?!api/|admin/|_moria/|assets/|styles\\.css|favicon\\.ico|.*\\.jpg|.*\\.png|.*\\.pdf).*)$",
+            "source": "/((?!api/|_moria/).*)",
             "destination": "/api"
         }
     ],
