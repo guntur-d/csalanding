@@ -163,6 +163,18 @@ export async function initApp() {
 
         // Diagnostic route
         app.server.get('/vercel-debug', async () => {
+            const listFiles = (dir: string): any[] => {
+                if (!fs.existsSync(dir)) return [];
+                return fs.readdirSync(dir).map(file => {
+                    const fullPath = path.join(dir, file);
+                    const stats = fs.statSync(fullPath);
+                    if (stats.isDirectory()) {
+                        return { name: file, type: 'dir', children: listFiles(fullPath) };
+                    }
+                    return { name: file, type: 'file', size: stats.size };
+                });
+            };
+
             return {
                 timestamp: new Date().toISOString(),
                 isProd,
@@ -170,6 +182,10 @@ export async function initApp() {
                 dirname: __dirname,
                 productionAssets,
                 foundRoutes,
+                fs: {
+                    public: listFiles(publicDir),
+                    dist: listFiles(clientDir)
+                },
                 routes: app.server.printRoutes()
             };
         });
