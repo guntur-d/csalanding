@@ -257,9 +257,9 @@ pnpm dev -- --force
 ## 📈 IMPROVEMENT: 11. SSR Database Safety
 - **Issue**: Potential 500s or crashes if DB decorator is missing during SSR.
 ## ✅ RESOLVED: 12. Configuration Auto-Registration Failure (Critical)
-- **Issue**: Plugins configured in `moria.config.ts` (like `database` and `auth`) are not automatically registered by the framework. This causes `request.server.db` to be missing during SSR.
-- **Cause**: The `createApp` function in `@moriajs/core` does not have logic to detect and `app.use()` the corresponding plugins based on the configuration object.
-- **Resolution**: Patched `@moriajs/core/dist/app.js` to dynamically import and register `@moriajs/db` and `@moriajs/auth` if their configuration blocks exist in `moria.config.ts`.
+- **Status**: Resolved in v0.4.13
+- **Issue**: Plugins configured in `moria.config.ts` (like `database` and `auth`) are not automatically registered by the framework.
+- **Resolution**: The framework now automatically detects and registers `@moriajs/db` and `@moriajs/auth` if their configuration blocks exist. Manual registration in `index.ts` is no longer required and will cause "decorator already added" errors.
 
 ### Root Cause Analysis (Code)
 In `createApp`:

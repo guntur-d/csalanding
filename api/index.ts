@@ -24,21 +24,6 @@ async function initApp() {
             }
         });
 
-        // Register Database
-        if (config.database) {
-            console.log('[Vercel] Registering Database...');
-            await app.use(createDatabasePlugin(config.database as any));
-        }
-
-        // Register Auth
-        if (config.auth) {
-            console.log('[Vercel] Registering Auth...');
-            await app.use(createAuthPlugin({
-                ...config.auth,
-                secret: config.auth.secret || 'dev-secret-key-csa'
-            } as any));
-        }
-
         await app.server.ready();
         console.log('[Vercel] App Initialization Complete');
         return app;
