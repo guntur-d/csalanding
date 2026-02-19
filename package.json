@@ -8,17 +8,17 @@
     "start": "moria start"
   },
   "dependencies": {
-    "@moriajs/auth": "0.4.12",
-    "@moriajs/core": "0.4.12",
-    "@moriajs/db": "0.4.12",
-    "@moriajs/renderer": "0.4.12",
-    "@moriajs/ui": "0.4.12",
+    "@moriajs/auth": "0.4.13",
+    "@moriajs/core": "0.4.13",
+    "@moriajs/db": "0.4.13",
+    "@moriajs/renderer": "0.4.13",
+    "@moriajs/ui": "0.4.13",
     "dotenv": "^17.3.1",
     "mithril": "^2.3.8",
     "mongodb": "^6.10.0"
   },
   "devDependencies": {
-    "@moriajs/cli": "0.4.12",
+    "@moriajs/cli": "0.4.13",
     "@types/mithril": "^2.2.7",
     "@types/node": "^22.0.0",
     "fastify": "^5.0.0",
