@@ -165,6 +165,7 @@ export async function initApp() {
             const searchPaths = [
                 path.resolve(projectRoot, config.routes?.dir ?? 'src/routes'),
                 path.resolve(projectRoot, 'src/routes'),
+                path.resolve(projectRoot, 'src/routes/pages'), // Explicitly register pages root for /admin, / etc.
                 path.resolve(__dirname, 'routes'),
                 path.resolve(__dirname, '..', 'src', 'routes')
             ];
