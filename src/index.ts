@@ -44,62 +44,65 @@ export async function initApp() {
                 }
             });
 
-            // 1. Static File Serving
+            // 1. Path Resolution
             const publicDir = path.resolve(projectRoot, 'public');
             const clientDir = path.resolve(projectRoot, 'dist/client');
             const assetsDir = path.resolve(clientDir, 'assets');
 
-            // Serve public/ on prefix /
-            if (fs.existsSync(publicDir)) {
-                console.log(`[Vercel] Mounting public: ${publicDir}`);
+            // 2. Static File Serving (Root level)
+            // We register on / to handle public files (styles.css, images)
+            // We use decorateReply: true to enable reply.sendFile for our custom handler
+            const staticRoots: string[] = [];
+            if (fs.existsSync(publicDir)) staticRoots.push(publicDir);
+            if (fs.existsSync(clientDir)) staticRoots.push(clientDir);
+
+            if (staticRoots.length > 0) {
+                console.log(`[Vercel] Mounting static roots: ${staticRoots.join(', ')}`);
                 await app.server.register(fastifyStatic, {
-                    root: publicDir,
+                    root: staticRoots,
                     prefix: '/',
-                    decorateReply: false
+                    decorateReply: true, // Enable sendFile
+                    index: false
                 });
             }
 
-            // Serve dist/client/assets on prefix /assets
-            // This matches Vercel's rewrite source or direct browser requests
-            if (fs.existsSync(assetsDir)) {
-                console.log(`[Vercel] Mounting assets: ${assetsDir}`);
-                await app.server.register(fastifyStatic, {
-                    root: assetsDir,
-                    prefix: '/assets/',
-                    decorateReply: false
-                });
-            }
-
-            // Fallback for everything else in dist/client
-            if (fs.existsSync(clientDir)) {
-                await app.server.register(fastifyStatic, {
-                    root: clientDir,
-                    prefix: '/dist/client/',
-                    decorateReply: false
-                });
-            }
-
-            // 2. Discover correctly hashed assets from dist/client/index.html
+            // 3. Asset Discovery (Sync with hashed Vite assets)
             let discoveredAssets: string[] = [];
-            const indexHtmlPath = path.join(clientDir, 'index.html');
-            if (fs.existsSync(indexHtmlPath)) {
-                try {
-                    const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
-                    // Permissive regex for script and link tags
-                    const scripts = indexHtml.match(/<script\b[^>]*?\bsrc=["']\/assets\/[^"']+["'][^>]*>.*?<\/script>/gi) || [];
-                    const links = indexHtml.match(/<link\b[^>]*?\bhref=["']\/assets\/[^"']+["'][^>]*>/gi) || [];
-                    discoveredAssets = [...scripts, ...links];
-                    console.log(`[Vercel] Discovered ${discoveredAssets.length} production assets.`);
-                } catch (e) {
-                    console.error('[Vercel] Asset discovery failed:', e);
+            if (isProd) {
+                const indexHtmlPath = path.join(clientDir, 'index.html');
+                if (fs.existsSync(indexHtmlPath)) {
+                    try {
+                        const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+                        const scripts = indexHtml.match(/<script\b[^>]*?\bsrc=["']\/assets\/[^"']+["'][^>]*>.*?<\/script>/gi) || [];
+                        const links = indexHtml.match(/<link\b[^>]*?\bhref=["']\/assets\/[^"']+["'][^>]*>/gi) || [];
+                        discoveredAssets = [...scripts, ...links];
+                        console.log(`[Vercel] Discovered ${discoveredAssets.length} production assets.`);
+                    } catch (e) {
+                        console.error('[Vercel] Asset discovery failed:', e);
+                    }
                 }
             }
 
-            // 3. CSP & Asset Injection Hook
+            // 4. Request Hooks
+            // A. CSP & Headers
             app.server.addHook('onRequest', async (req, reply) => {
                 reply.removeHeader('Content-Security-Policy');
             });
 
+            // B. Assets Bypass (Fixes 404s caused by Moria's default /assets/ route)
+            app.server.addHook('onRequest', async (req, reply) => {
+                const url = req.url.split('?')[0];
+                if (url.startsWith('/assets/') && !url.includes('..')) {
+                    const fileName = url.replace('/assets/', '');
+                    const filePath = path.join(assetsDir, fileName);
+                    if (fs.existsSync(filePath)) {
+                        console.log(`[Vercel] Serving asset via bridge-bypass: ${fileName}`);
+                        return reply.sendFile(fileName, assetsDir);
+                    }
+                }
+            });
+
+            // C. Asset Injection (Post-rendering)
             app.server.addHook('onSend', async (request, reply, payload) => {
                 const csp = [
                     "default-src 'self' https://www.youtube.com https://youtube.com",
@@ -113,24 +116,21 @@ export async function initApp() {
 
                 reply.header('Content-Security-Policy', csp);
 
-                // Only inject into HTML pages
                 if (typeof payload === 'string' && payload.includes('<head>')) {
                     let processedPayload = payload;
 
-                    // A. Cleanup broken Moria defaults (hardcoded non-hashed paths)
+                    // Cleanup broken defaults
                     processedPayload = processedPayload.replace(/<script[^>]+src="\/assets\/entry-client\.js"[^>]*><\/script>/gi, '');
 
-                    // B. Inject discovered assets ONLY if we found them
+                    // Inject discovered assets
                     let headInjection = '';
                     if (discoveredAssets.length > 0) {
-                        // Avoid double injection: Remove tags matching our discovered ones if they already exist
-                        // (Moria renderer might have tried to inject some)
+                        processedPayload = processedPayload.replace(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/gi, '');
                         headInjection += '    ' + discoveredAssets.join('\n    ') + '\n';
                     }
 
-                    // C. Styles.css fallback if not in discoveredAssets
-                    const hasStyles = processedPayload.includes('styles.css') || headInjection.includes('styles.css');
-                    if (!hasStyles) {
+                    // Styles.css fallback
+                    if (!processedPayload.includes('styles.css') && !headInjection.includes('styles.css')) {
                         headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
                     }
 
@@ -142,22 +142,12 @@ export async function initApp() {
                 return payload;
             });
 
-            // 4. Register plugins
+            // 5. Plugins & Routes
             try {
-                if (config.database) {
-                    await app.use(createDatabasePlugin(config.database as any));
-                }
-                if (config.auth) {
-                    await app.use(createAuthPlugin({
-                        ...config.auth,
-                        secret: config.auth.secret || 'dev-secret-key-csa'
-                    } as any));
-                }
-            } catch (pluginError) {
-                console.error('[Vercel] Plugin failure:', pluginError);
-            }
+                if (config.database) await app.use(createDatabasePlugin(config.database as any));
+                if (config.auth) await app.use(createAuthPlugin({ ...config.auth, secret: config.auth.secret || 'dev-secret-key-csa' } as any));
+            } catch (e) { console.error('[Vercel] Plugin failure:', e); }
 
-            // 5. Route Registration
             const searchPaths = [
                 path.resolve(projectRoot, config.routes?.dir ?? 'src/routes'),
                 path.resolve(projectRoot, 'src/routes'),
@@ -171,17 +161,10 @@ export async function initApp() {
                 if (fs.existsSync(routesDir)) {
                     console.log(`[Vercel] Registering routes from: ${routesDir}`);
                     try {
-                        await registerRoutes(app.server, routesDir, {
-                            mode: isProd ? 'production' : 'development',
-                            config,
-                            vite: undefined
-                        });
+                        await registerRoutes(app.server, routesDir, { mode: isProd ? 'production' : 'development', config, vite: undefined });
                         routesRegistered = true;
                         break;
-                    } catch (routeError) {
-                        lastError = routeError;
-                        console.error(`[Vercel] Registration error:`, routeError);
-                    }
+                    } catch (e) { lastError = e; console.error('[Vercel] Registration error:', e); }
                 }
             }
 
@@ -191,8 +174,7 @@ export async function initApp() {
                     if (!fs.existsSync(dir)) return [];
                     try {
                         return fs.readdirSync(dir).map(file => {
-                            const fullPath = path.join(dir, file);
-                            const stats = fs.statSync(fullPath);
+                            const stats = fs.statSync(path.join(dir, file));
                             return { name: file, type: stats.isDirectory() ? 'dir' : 'file', size: stats.size };
                         }).slice(0, 50);
                     } catch (e) { return [{ error: String(e) }]; }
@@ -207,8 +189,6 @@ export async function initApp() {
                     lastError: lastError ? lastError.message : null,
                     fs: {
                         root: listFiles(projectRoot),
-                        src: listFiles(path.join(projectRoot, 'src')),
-                        routes: listFiles(path.join(projectRoot, 'src/routes')),
                         public: listFiles(publicDir),
                         dist: listFiles(clientDir),
                         assets: listFiles(assetsDir)
@@ -241,11 +221,7 @@ if (!isVercelRuntime) {
     initApp().then(async (instance) => {
         const port = config.server?.port || 3001;
         const host = config.server?.host || '0.0.0.0';
-        try {
-            await instance.server.listen({ port, host });
-        } catch (err: any) {
-            if (err.code !== 'EADDRINUSE') throw err;
-        }
+        try { await instance.server.listen({ port, host }); } catch (err: any) { if (err.code !== 'EADDRINUSE') throw err; }
     }).catch(console.error);
 }
 
