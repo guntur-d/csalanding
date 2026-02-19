@@ -27,7 +27,7 @@ export async function GET(request: FastifyRequest, reply: FastifyReply) {
     // if called from the admin dashboard (which should have its own middleware)
     const db = (request.server as any).db;
     try {
-        const inquiries = await db.findMany('inquiries', {});
+        const inquiries = await db.find('inquiries', {});
         // Sort by date descending
         return inquiries.sort((a: any, b: any) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
