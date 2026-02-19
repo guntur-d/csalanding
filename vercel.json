@@ -2,12 +2,12 @@
     "version": 2,
     "rewrites": [
         {
-            "source": "/((?!serverless/|moria/|_moria/).*)",
-            "destination": "/serverless/index"
+            "source": "/((?!api/|moria/|_moria/).*)",
+            "destination": "/api/index"
         }
     ],
     "functions": {
-        "serverless/index.ts": {
+        "api/index.ts": {
             "includeFiles": "{dist,public,src,package.json}/**",
             "maxDuration": 60
         }
