@@ -15,20 +15,20 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0
       '@moriajs/auth':
-        specifier: 0.4.13
-        version: 0.4.13(@moriajs/core@0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))
+        specifier: 0.4.14
+        version: 0.4.14(@moriajs/core@0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))
       '@moriajs/core':
-        specifier: 0.4.13
-        version: 0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
+        specifier: 0.4.14
+        version: 0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
       '@moriajs/db':
-        specifier: 0.4.13
-        version: 0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/core@0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))(@types/mongodb@4.0.7)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
+        specifier: 0.4.14
+        version: 0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/core@0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))(@types/mongodb@4.0.7)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
       '@moriajs/renderer':
-        specifier: 0.4.13
-        version: 0.4.13
+        specifier: 0.4.14
+        version: 0.4.14
       '@moriajs/ui':
-        specifier: 0.4.13
-        version: 0.4.13(mithril@2.3.8)
+        specifier: 0.4.14
+        version: 0.4.14(mithril@2.3.8)
       dotenv:
         specifier: ^17.3.1
         version: 17.3.1
@@ -46,8 +46,8 @@ importers:
         version: 6.21.0
     devDependencies:
       '@moriajs/cli':
-        specifier: 0.4.13
-        version: 0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
+        specifier: 0.4.14
+        version: 0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
       '@types/mithril':
         specifier: ^2.2.7
         version: 2.2.7
@@ -303,30 +303,30 @@ packages:
   '@mongodb-js/saslprep@1.4.6':
     resolution: {integrity: sha512-y+x3H1xBZd38n10NZF/rEBlvDOOMQ6LKUTHqr8R9VkJ+mmQOYtJFxIlkkK8fZrtOiL6VixbOBWMbZGBdal3Z1g==}
 
-  '@moriajs/auth@0.4.13':
-    resolution: {integrity: sha512-k2AQCPvpU0tijxHTGtf4wAoW/uielcZzFeM68dVkWVMbMP6Lr2hnJgLiQnULbAXWE4eJX76lPmTDVHdt2Hq7Jg==}
+  '@moriajs/auth@0.4.14':
+    resolution: {integrity: sha512-v+bM9S5FfSC/yOb1OymovRHJAnULYbKX+vihK4y8x19qCUpIHQfpzBc2aRyaASe5ZSG8sX0YQjh82TCzvexByA==}
     peerDependencies:
-      '@moriajs/core': 0.4.13
+      '@moriajs/core': 0.4.14
 
-  '@moriajs/cli@0.4.13':
-    resolution: {integrity: sha512-7Vv6Ecfzi+uPvcho/vQ5Qk5lOzmnROc5XqMj7EXSF6IF/SKwEZo3IO+dZkuBCbTbcjZ+XuJRLnzAAVTunQNq4Q==}
+  '@moriajs/cli@0.4.14':
+    resolution: {integrity: sha512-x/YIX53i2e7gtbGF1s+5qs8iR3Qq1p5iW7n+1BqxZGr8ItnzhstvWvOogOqjazIANqslWoRQQlbnYocFftWKpw==}
     hasBin: true
 
-  '@moriajs/core@0.4.13':
-    resolution: {integrity: sha512-zFt0np5GsUZz8EI1PE4rvdMGO1YhJ8jlnQ/abrDfs58ttE6Jdf9BwTyEUDOVdpnzrZol+/g/jKTwQAO1JOLsyA==}
+  '@moriajs/core@0.4.14':
+    resolution: {integrity: sha512-GgnZ74D1RzJb78fSM9th7/Sjx280tMmEx3lvPRqrhQw/vfBKdmbH9jF2qZ4+xWsZxyACiMW67fLOOqBz3j8okQ==}
     peerDependencies:
-      '@moriajs/renderer': 0.4.13
+      '@moriajs/renderer': 0.4.14
 
-  '@moriajs/db@0.4.13':
-    resolution: {integrity: sha512-pFF+8K6PiRuMqNOx6uoTwEJK+1RxtwmbJK0zUnKdUDrFtDcPAxBipwfS0349koND/ccQWig8sKtxkjVVvnsU/g==}
+  '@moriajs/db@0.4.14':
+    resolution: {integrity: sha512-JhVumqylJEOITBtzhIkf6Y6m59NcsNfXQxmeoyXOU2TfFQnYf8hP/snWUyTpvB5RVfksVHyhaO2n/BQHcTCcsw==}
     peerDependencies:
-      '@moriajs/core': 0.4.13
+      '@moriajs/core': 0.4.14
 
-  '@moriajs/renderer@0.4.13':
-    resolution: {integrity: sha512-AKZdog1YAYOQtD9WKKLilP2P5I49XunCU/IxnWjjAg7QkhN4tP32CMvyfAhybD/uHkjc2Ie5DPviOJPqi1KA8Q==}
+  '@moriajs/renderer@0.4.14':
+    resolution: {integrity: sha512-qXnxdxKHKZSPVJ6drOIb60DGs2bb+YjYZ71eEGjPACitCF3gsOn9ixFKzeaCvhROaMm2oD9FlYyeb0eVzbHsFQ==}
 
-  '@moriajs/ui@0.4.13':
-    resolution: {integrity: sha512-OTm+Ic1ZfSo2KHnfpWPd1/Vln2nXzBXkkN5fg7io1ofmRO6mlF3ydWsXW/8lxNLs1mQRFslQ5RE1f4jtQk6cIw==}
+  '@moriajs/ui@0.4.14':
+    resolution: {integrity: sha512-sC603BEIt8wPVDBlyhQ0ET+i/xHHmWAAB4+sZ53nsECBmTLY2fcH7GMzJGJ7X4Mpums2hsPk/RCv1iWd3bXAbQ==}
     peerDependencies:
       mithril: ^2.2.0
 
@@ -1001,6 +1001,7 @@ packages:
   prebuild-install@7.1.3:
     resolution: {integrity: sha512-8Mf2cbV7x1cXPUILADGI3wuhfqWvtiLA1iclTDbFRZkgRQS0NqsPZphna9V+HyTEadheuPmjaJMsbzKQFOzLug==}
     engines: {node: '>=10'}
+    deprecated: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
     hasBin: true
 
   process-nextick-args@2.0.1:
@@ -1465,15 +1466,15 @@ snapshots:
     dependencies:
       sparse-bitfield: 3.0.3
 
-  '@moriajs/auth@0.4.13(@moriajs/core@0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))':
+  '@moriajs/auth@0.4.14(@moriajs/core@0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))':
     dependencies:
       '@fastify/cookie': 11.0.2
       '@fastify/jwt': 10.0.0
-      '@moriajs/core': 0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
+      '@moriajs/core': 0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
 
-  '@moriajs/cli@0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)':
+  '@moriajs/cli@0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)':
     dependencies:
-      '@moriajs/core': 0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
+      '@moriajs/core': 0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
       cac: 6.7.14
       picocolors: 1.1.1
       vite: 6.4.1(@types/node@22.19.11)
@@ -1508,7 +1509,7 @@ snapshots:
       - uuid
       - yaml
 
-  '@moriajs/core@0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)':
+  '@moriajs/core@0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)':
     dependencies:
       '@fastify/compress': 8.3.1
       '@fastify/cookie': 11.0.2
@@ -1516,14 +1517,14 @@ snapshots:
       '@fastify/helmet': 13.0.2
       '@fastify/middie': 9.1.0
       '@fastify/static': 9.0.0
-      '@moriajs/renderer': 0.4.13
+      '@moriajs/renderer': 0.4.14
       fastify: 5.6.1
       glob: 11.1.0
       pino-pretty: 13.1.3
       vite: 6.4.1(@types/node@22.19.11)
     optionalDependencies:
-      '@moriajs/auth': 0.4.13(@moriajs/core@0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))
-      '@moriajs/db': 0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/core@0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))(@types/mongodb@4.0.7)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
+      '@moriajs/auth': 0.4.14(@moriajs/core@0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))
+      '@moriajs/db': 0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/core@0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))(@types/mongodb@4.0.7)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@event-driven-io/dumbo'
@@ -1554,10 +1555,10 @@ snapshots:
       - uuid
       - yaml
 
-  '@moriajs/db@0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/core@0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))(@types/mongodb@4.0.7)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)':
+  '@moriajs/db@0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/core@0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))(@types/mongodb@4.0.7)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)':
     dependencies:
       '@event-driven-io/pongo': 0.16.11(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@types/mongodb@4.0.7)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0)
-      '@moriajs/core': 0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
+      '@moriajs/core': 0.4.14(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.14)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
       kysely: 0.27.6
       mongodb: 6.21.0
     optionalDependencies:
@@ -1582,12 +1583,12 @@ snapshots:
       - socks
       - uuid
 
-  '@moriajs/renderer@0.4.13':
+  '@moriajs/renderer@0.4.14':
     dependencies:
       mithril: 2.3.8
       mithril-node-render: 3.0.2(mithril@2.3.8)
 
-  '@moriajs/ui@0.4.13(mithril@2.3.8)':
+  '@moriajs/ui@0.4.14(mithril@2.3.8)':
     dependencies:
       mithril: 2.3.8
 

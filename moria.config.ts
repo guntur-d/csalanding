@@ -18,6 +18,6 @@ export default defineConfig({
         cookieName: 'csa_auth',
     },
     vite: {
-        clientEntry: '/src/entry-client.ts',
+        clientEntry: 'src/entry-client.ts',
     }
 });

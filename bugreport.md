@@ -295,3 +295,18 @@ if (config.auth) {
 - **Implementation (Reference)**:
     - Create `api/index.ts` to wrap `createApp()`.
     - Export a handler that emits the request to `app.server.server`.
+
+---
+
+## ✅ RESOLVED: 15. Vite `clientEntry` Absolute Path Resolution Bug on Windows
+- **Status**: Workaround in project configuration (framework could be made more resilient).
+- **Issue**: `moria build` fails with `Build failed: Could not resolve entry module "../../../../../src/entry-client.ts"` on Windows systems.
+- **Root Cause**: The default configuration pattern `clientEntry: '/src/entry-client.ts'` causes `path.resolve(process.cwd(), clientEntry)` internally in Vite/Rollup. On Windows, the leading slash is interpreted as an absolute path from the drive root (e.g. `C:\src\entry-client.ts`), breaking module resolution.
+- **Workaround/Resolution**: Remove the leading slash in user configs so it becomes relative to the working directory:
+  ```typescript
+  // In moria.config.ts
+  vite: {
+      clientEntry: 'src/entry-client.ts',
+  }
+  ```
+- **Recommended Framework Fix**: The `build` command in `@moriajs/cli` could strip leading slashes or explicitly use `path.join` with `process.cwd()` to normalize absolute vs relative paths uniformly across OSs.

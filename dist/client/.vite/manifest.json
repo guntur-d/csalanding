@@ -1,0 +1,56 @@
+{
+  "_index-C128AHEg.js": {
+    "file": "assets/index-C128AHEg.js",
+    "name": "index",
+    "imports": [
+      "_index-CMj6JYxd.js"
+    ]
+  },
+  "_index-CMj6JYxd.js": {
+    "file": "assets/index-CMj6JYxd.js",
+    "name": "index",
+    "isDynamicEntry": true
+  },
+  "src/entry-client.ts": {
+    "file": "assets/entry-client-aqPeEoga.js",
+    "name": "entry-client",
+    "src": "src/entry-client.ts",
+    "isEntry": true,
+    "dynamicImports": [
+      "_index-CMj6JYxd.js",
+      "src/routes/admin/index.ts",
+      "src/routes/admin/login.ts",
+      "src/routes/index.ts"
+    ]
+  },
+  "src/routes/admin/index.ts": {
+    "file": "assets/index-DlQ49Qlj.js",
+    "name": "index",
+    "src": "src/routes/admin/index.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-CMj6JYxd.js",
+      "_index-C128AHEg.js"
+    ]
+  },
+  "src/routes/admin/login.ts": {
+    "file": "assets/login-BbEePgeR.js",
+    "name": "login",
+    "src": "src/routes/admin/login.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-CMj6JYxd.js",
+      "_index-C128AHEg.js"
+    ]
+  },
+  "src/routes/index.ts": {
+    "file": "assets/index-_Dxrh9VM.js",
+    "name": "index",
+    "src": "src/routes/index.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-CMj6JYxd.js",
+      "_index-C128AHEg.js"
+    ]
+  }
+}

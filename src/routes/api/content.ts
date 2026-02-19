@@ -10,6 +10,7 @@ export async function GET(request: FastifyRequest, reply: FastifyReply) {
             request.log.info('[API] No content found, seeding defaults...');
             const defaultContent = {
                 type: 'landing',
+                layout: 'classic',
                 hero: {
                     title: "Membangun Masa Depan Anda",
                     subtitle: "Hunian Nyaman, Harga Bersahabat! Lokasi Strategis di Rajapolah, Tasikmalaya.",
@@ -28,13 +29,25 @@ export async function GET(request: FastifyRequest, reply: FastifyReply) {
                     image: "FLYER RAJAPOLAH(3)(1).png"
                 },
                 projects: {
-                    sectionTitle: "Active Project: Rajapolah",
-                    projectTitle: "Griya Gita Indah Rajapolah",
-                    projectDescription: "Hunian Nyaman, Harga Bersahabat!",
-                    images: ["1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg", "6.jpg", "7.jpg"],
-                    videos: ["n2FyZwVvAX4", "VWRlFTw6QfI", "j2OxFmVgyGo", "9F3Jc5Xe4w8"],
-                    specsLeft: ["• Pondasi: Batu Kali", "• Dinding: Bata/Hebel", "• Lantai: Keramik", "• Rangka: Baja Ringan"],
-                    specsRight: ["• Atap: Genteng Metal", "• Plafon: Gypsum Board", "• Kusen: Aluminium", "• Sanitasi: Kloset Jongkok"]
+                    sectionTitle: "Active Projects",
+                    list: [
+                        {
+                            projectTitle: "Griya Gita Indah Rajapolah",
+                            projectDescription: "Hunian Nyaman, Harga Bersahabat! Lokasi strategis di Rajapolah.",
+                            images: ["1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg", "6.jpg", "7.jpg"],
+                            videos: ["n2FyZwVvAX4", "VWRlFTw6QfI", "j2OxFmVgyGo", "9F3Jc5Xe4w8"],
+                            specsLeft: ["• Pondasi: Batu Kali", "• Dinding: Bata/Hebel", "• Lantai: Keramik", "• Rangka: Baja Ringan"],
+                            specsRight: ["• Atap: Genteng Metal", "• Plafon: Gypsum Board", "• Kusen: Aluminium", "• Sanitasi: Kloset Jongkok"]
+                        },
+                        {
+                            projectTitle: "Griya Satria Agung (Coming Soon)",
+                            projectDescription: "Proyek terbaru kami yang menghadirkan konsep modern minimalis.",
+                            images: ["1.jpg", "2.jpg"],
+                            videos: ["9F3Jc5Xe4w8"],
+                            specsLeft: ["• Pondasi: Beton Bertulang", "• Dinding: Bata Merah", "• Lantai: Granit"],
+                            specsRight: ["• Rangka: Baja Ringan", "• Atap: Genteng Keramik", "• Sanitasi: Kloset Duduk"]
+                        }
+                    ]
                 },
                 contact: {
                     address: "Jl. Burujul, Desa Rajapolah, Kec. Rajapolah, Kab. Tasikmalaya",

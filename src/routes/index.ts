@@ -28,13 +28,36 @@ export default {
         const { serverData } = vnode.attrs;
         const content = serverData?.content || {};
 
-        return [
-            m(Navigation),
-            m(Hero, { content: content.hero || {} }),
-            m(About, { content: content.about || {} }),
-            m(Projects, { content: content.projects || {} }),
-            m(Contact, { content: content.contact || {} }),
-            m(Footer)
-        ];
+        const layoutType = content.layout || 'classic';
+
+        // Base components that are always first and last
+        const nav = m(Navigation);
+        const hero = m(Hero, { content: content.hero || {} });
+        const footer = m(Footer);
+
+        // Dynamic sections
+        const about = m(About, { content: content.about || {} });
+        const projects = m(Projects, { content: content.projects || {} });
+        const contact = m(Contact, { content: content.contact || {} });
+
+        let pageSections;
+
+        switch (layoutType) {
+            case 'projects-first':
+                pageSections = [projects, about, contact];
+                break;
+            case 'lead-gen':
+                pageSections = [contact, projects, about];
+                break;
+            case 'about-focused':
+                pageSections = [about, contact, projects];
+                break;
+            case 'classic':
+            default:
+                pageSections = [about, projects, contact];
+                break;
+        }
+
+        return [nav, hero, ...pageSections, footer];
     }
 };

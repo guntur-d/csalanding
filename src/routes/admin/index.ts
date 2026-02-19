@@ -117,6 +117,24 @@ export default {
             ]),
 
             m(".admin-grid", { style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2.5rem;" }, [
+                // Layout Settings
+                m(".admin-card", { style: "background: #1a1a1a; padding: 2rem; border-radius: 15px; border: 1px solid #333; grid-column: 1 / -1;" }, [
+                    m("h2", { style: "color: #c5a059; margin-bottom: 1.5rem;" }, "Layout Settings"),
+                    m(".form-group", [
+                        m("label", { style: "display: block; color: #aaa; margin-bottom: 0.5rem;" }, "Landing Page Layout"),
+                        m("select", {
+                            style: "width: 100%; padding: 1rem; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px; cursor: pointer;",
+                            value: content.layout || 'classic',
+                            onchange: (e: any) => content.layout = e.target.value
+                        }, [
+                            m("option", { value: "classic" }, "Classic (Hero → About → Projects → Contact)"),
+                            m("option", { value: "projects-first" }, "Projects First (Hero → Projects → About → Contact)"),
+                            m("option", { value: "lead-gen" }, "Lead Generation (Hero → Contact → Projects → About)"),
+                            m("option", { value: "about-focused" }, "About Focused (Hero → About → Contact → Projects)")
+                        ])
+                    ])
+                ]),
+
                 // Inquiries Section (New)
                 m(".admin-card", { style: "background: #1a1a1a; padding: 2rem; border-radius: 15px; border: 1px solid #333; grid-column: 1 / -1;" }, [
                     m("h2", { style: "color: #c5a059; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;" }, [
