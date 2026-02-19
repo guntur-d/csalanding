@@ -1,3 +1,4 @@
+import 'fastify';
 import { createApp } from '@moriajs/core';
 import config from '../moria.config.js';
 
