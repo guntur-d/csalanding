@@ -4,29 +4,56 @@ import { createDatabasePlugin } from '@moriajs/db';
 import { createAuthPlugin } from '@moriajs/auth';
 import config from '../moria.config.js';
 
-// Initialize the app once
-const app = await createApp({
-    config: {
-        ...config,
-        mode: 'production',
-        rootDir: process.cwd()
+let app: any;
+
+async function initApp() {
+    if (app) return app;
+
+    console.log('[Vercel] Initializing MoriaJS App...');
+    try {
+        app = await createApp({
+            config: {
+                ...config,
+                mode: 'production',
+                rootDir: process.cwd(),
+            }
+        });
+
+        // Register Database
+        if (config.database) {
+            console.log('[Vercel] Registering Database...');
+            await app.use(createDatabasePlugin(config.database as any));
+        }
+
+        // Register Auth
+        if (config.auth) {
+            console.log('[Vercel] Registering Auth...');
+            await app.use(createAuthPlugin({
+                ...config.auth,
+                secret: config.auth.secret || 'dev-secret-key-csa'
+            } as any));
+        }
+
+        await app.server.ready();
+        console.log('[Vercel] App Initialization Complete');
+        return app;
+    } catch (error: any) {
+        console.error('[Vercel] CRITICAL INITIALIZATION ERROR:', error);
+        throw error;
     }
-});
-
-// Register Database
-if (config.database) {
-    await app.use(createDatabasePlugin(config.database as any));
-}
-
-// Register Auth
-if (config.auth) {
-    await app.use(createAuthPlugin({
-        ...config.auth,
-        secret: config.auth.secret || 'dev-secret-key-csa'
-    } as any));
 }
 
 export default async (req: any, res: any) => {
-    await app.server.ready();
-    app.server.server.emit('request', req, res);
+    try {
+        const instance = await initApp();
+        instance.server.server.emit('request', req, res);
+    } catch (e: any) {
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+            error: "MoriaJS Initialization Failed",
+            message: e.message,
+            stack: process.env.NODE_ENV === 'development' ? e.stack : undefined
+        }));
+    }
 };
