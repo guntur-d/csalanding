@@ -42,16 +42,15 @@ export async function initApp() {
             }
         });
 
-        // 1. Static File Serving
-        const publicDir = path.resolve(projectRoot, 'public');
-        if (fs.existsSync(publicDir)) {
-            console.log(`[Vercel] Mounting static: ${publicDir}`);
-            await app.server.register(fastifyStatic, {
-                root: publicDir,
-                prefix: '/',
-                decorateReply: false
-            });
-        }
+        // 1. Static File Serving (Bridge for Vercel/Local consistency)
+        // Serve project root for images, styles.css, etc.
+        // We use a whitelist of extensions to be safe.
+        await app.server.register(fastifyStatic, {
+            root: projectRoot,
+            prefix: '/',
+            allowedPath: (path) => /\.(css|js|png|jpg|jpeg|gif|svg|ico|pdf|txt)$/.test(path),
+            decorateReply: false
+        });
 
         const clientDir = path.resolve(projectRoot, 'dist/client');
         if (fs.existsSync(clientDir)) {
@@ -73,18 +72,23 @@ export async function initApp() {
             const csp = [
                 "default-src 'self' https://www.youtube.com https://youtube.com",
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com https://youtube.com",
-                "style-src 'self' 'unsafe-inline'",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
                 "img-src 'self' data: https://i.ytimg.com",
                 "frame-src 'self' https://www.youtube.com https://youtube.com",
                 "connect-src 'self' ws://localhost:* wss://localhost:*",
-                "font-src 'self' data:"
+                "font-src 'self' data: https://fonts.gstatic.com"
             ].join('; ');
 
             reply.header('Content-Security-Policy', csp);
 
             if (typeof payload === 'string' && payload.includes('<head>')) {
+                let processedPayload = payload;
+
+                // Remove any broken/default entry-client.js tags Moria might have injected
+                processedPayload = processedPayload.replace(/<script[^>]+src="[^"]*entry-client\.js"[^>]*><\/script>/g, '');
+
                 let headInjection = '';
-                if (!payload.includes('styles.css')) {
+                if (!processedPayload.includes('styles.css')) {
                     headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
                 }
                 const assetsDir = path.join(clientDir, 'assets');
@@ -92,12 +96,14 @@ export async function initApp() {
                     const files = fs.readdirSync(assetsDir);
                     const entryFile = files.find(f => f.startsWith('index-') && f.endsWith('.js'));
                     if (entryFile) {
+                        // Use an absolute path /dist/client/assets/ for reliability
                         headInjection += `    <script type="module" src="/dist/client/assets/${entryFile}"></script>\n`;
                     }
                 }
                 if (headInjection) {
-                    payload = payload.replace('<head>', '<head>\n' + headInjection);
+                    processedPayload = processedPayload.replace('<head>', '<head>\n' + headInjection);
                 }
+                return processedPayload;
             }
             return payload;
         });
