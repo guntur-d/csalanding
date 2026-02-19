@@ -102,8 +102,8 @@ export async function initApp() {
                     const files = fs.readdirSync(assetsDir);
                     const entryFile = files.find(f => f.startsWith('index-') && f.endsWith('.js'));
                     if (entryFile) {
-                        const entryPath = `/dist/client/assets/${entryFile}`;
-                        console.log(`[Vercel] Injecting absolute entry: ${entryPath}`);
+                        const entryPath = `/assets/${entryFile}`;
+                        console.log(`[Vercel] Injecting script: ${entryPath}`);
                         processedPayload = processedPayload.replace('<head>', `<head>\n    <script type="module" src="${entryPath}"></script>`);
                     }
                 }
