@@ -7,9 +7,11 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+// Fix for TypeScript augmentations in serverless
+import '@fastify/cookie';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// In Vercel, everything is flattened. Let's try to find the root.
 const projectRoot = process.cwd();
 
 let app: any;
@@ -22,10 +24,6 @@ export async function initApp() {
 
     console.log(`[Vercel] __dirname: ${__dirname}`);
     console.log(`[Vercel] projectRoot (cwd): ${projectRoot}`);
-
-    try {
-        console.log(`[Vercel] root contents: ${JSON.stringify(fs.readdirSync(projectRoot))}`);
-    } catch (e) { }
 
     app = await createApp({
         config: {
@@ -43,46 +41,67 @@ export async function initApp() {
         }
     });
 
-    // Manually register plugins
+    // Add immediate debug route to verify Fastify is alive
+    app.server.get('/vercel-debug', async () => ({
+        status: 'UP',
+        cwd: process.cwd(),
+        dirname: __dirname,
+        projectRoot,
+        configPaths: {
+            routes: config.routes?.dir,
+            rootDir: config.rootDir
+        }
+    }));
+
+    // Manually register plugins because auto-registration fails on Vercel
     if (config.database) {
         console.log('[Vercel] Manually registering @moriajs/db');
-        await app.use(createDatabasePlugin(config.database as any));
+        try {
+            await app.use(createDatabasePlugin(config.database as any));
+        } catch (e) {
+            console.error('[Vercel] DB Plugin Registration Failed:', e);
+        }
     }
     if (config.auth) {
         console.log('[Vercel] Manually registering @moriajs/auth');
-        await app.use(createAuthPlugin({
-            ...config.auth,
-            secret: config.auth.secret || 'dev-secret-key-csa'
-        } as any));
+        try {
+            await app.use(createAuthPlugin({
+                ...config.auth,
+                secret: config.auth.secret || 'dev-secret-key-csa'
+            } as any));
+        } catch (e) {
+            console.error('[Vercel] Auth Plugin Registration Failed:', e);
+        }
     }
 
     // Manually register routes
-    // Try both absolute and relative paths
-    const routesDir = path.resolve(projectRoot, 'src/routes');
-    const altRoutesDir = path.resolve(__dirname, 'routes');
+    const routesDir = path.resolve(projectRoot, config.routes?.dir ?? 'src/routes');
 
-    let targetDir = routesDir;
-    if (!fs.existsSync(targetDir)) {
-        console.warn(`[Vercel] Primary routesDir NOT FOUND: ${targetDir}`);
-        targetDir = altRoutesDir;
-    }
-
-    if (fs.existsSync(targetDir)) {
-        console.log(`[Vercel] Registering routes from: ${targetDir}`);
+    if (fs.existsSync(routesDir)) {
+        console.log(`[Vercel] Registering routes from: ${routesDir}`);
         try {
-            const files = fs.readdirSync(targetDir, { recursive: true });
+            const files = fs.readdirSync(routesDir, { recursive: true });
             console.log(`[Vercel] Route files found: ${JSON.stringify(files)}`);
         } catch (e) {
-            console.error(`[Vercel] Failed to list targetDir: ${e}`);
+            console.error(`[Vercel] Failed to list routesDir: ${e}`);
         }
 
-        await registerRoutes(app.server, targetDir, {
-            mode: 'production',
-            config,
-            vite: undefined
-        });
+        try {
+            await registerRoutes(app.server, routesDir, {
+                mode: 'production',
+                config,
+                vite: undefined
+            });
+        } catch (e) {
+            console.error('[Vercel] registerRoutes Failed:', e);
+        }
     } else {
-        console.error(`[Vercel] NO ROUTES DIRECTORY FOUND! Tried: ${routesDir}, ${altRoutesDir}`);
+        console.error(`[Vercel] ROUTES DIRECTORY NOT FOUND: ${routesDir}`);
+        try {
+            // Log structure to help find where it is
+            const scan = fs.readdirSync(projectRoot, { recursive: true }).slice(0, 50);
+            console.log(`[Vercel] Root scan (partial): ${JSON.stringify(scan)}`);
+        } catch (e) { }
     }
 
     await app.server.ready();
@@ -101,7 +120,10 @@ if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
 export default async (req: any, res: any) => {
     try {
         const instance = await initApp();
-        instance.server.server.emit('request', req, res);
+        // Use nextTick to ensure everything is settled before emitting
+        process.nextTick(() => {
+            instance.server.server.emit('request', req, res);
+        });
     } catch (e: any) {
         res.statusCode = 500;
         res.setHeader('Content-Type', 'application/json');
