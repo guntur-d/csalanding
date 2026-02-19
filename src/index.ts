@@ -8,7 +8,8 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import fastifyStatic from '@fastify/static';
 
-// Fix for TypeScript augmentations in serverless
+// Fix for dependencies missed by Vercel NFT bundler
+import 'mithril-node-render';
 import '@fastify/cookie';
 
 const __filename = fileURLToPath(import.meta.url);
