@@ -45,36 +45,51 @@ export async function initApp() {
             });
 
             // 1. Static File Serving
-            const staticRoots: string[] = [];
             const publicDir = path.resolve(projectRoot, 'public');
-            if (fs.existsSync(publicDir)) {
-                staticRoots.push(publicDir);
-            }
             const clientDir = path.resolve(projectRoot, 'dist/client');
-            if (fs.existsSync(clientDir)) {
-                staticRoots.push(clientDir);
-            }
+            const assetsDir = path.resolve(clientDir, 'assets');
 
-            if (staticRoots.length > 0) {
-                console.log(`[Vercel] Mounting static roots: ${staticRoots.join(', ')}`);
+            // Serve public/ on prefix /
+            if (fs.existsSync(publicDir)) {
+                console.log(`[Vercel] Mounting public: ${publicDir}`);
                 await app.server.register(fastifyStatic, {
-                    root: staticRoots,
+                    root: publicDir,
                     prefix: '/',
-                    decorateReply: false,
-                    index: false
+                    decorateReply: false
                 });
             }
 
-            // 2. Discover correctly hashed assets
-            let productionAssets = '';
+            // Serve dist/client/assets on prefix /assets
+            // This matches Vercel's rewrite source or direct browser requests
+            if (fs.existsSync(assetsDir)) {
+                console.log(`[Vercel] Mounting assets: ${assetsDir}`);
+                await app.server.register(fastifyStatic, {
+                    root: assetsDir,
+                    prefix: '/assets/',
+                    decorateReply: false
+                });
+            }
+
+            // Fallback for everything else in dist/client
+            if (fs.existsSync(clientDir)) {
+                await app.server.register(fastifyStatic, {
+                    root: clientDir,
+                    prefix: '/dist/client/',
+                    decorateReply: false
+                });
+            }
+
+            // 2. Discover correctly hashed assets from dist/client/index.html
+            let discoveredAssets: string[] = [];
             const indexHtmlPath = path.join(clientDir, 'index.html');
             if (fs.existsSync(indexHtmlPath)) {
                 try {
                     const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
-                    const scriptMatches = indexHtml.match(/<script[^>]+src="\/assets\/[^"]+"[^>]*><\/script>/g) || [];
-                    const linkMatches = indexHtml.match(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/g) || [];
-                    productionAssets = [...scriptMatches, ...linkMatches].join('\n    ');
-                    console.log(`[Vercel] Discovered ${scriptMatches.length} scripts and ${linkMatches.length} links.`);
+                    // Permissive regex for script and link tags
+                    const scripts = indexHtml.match(/<script\b[^>]*?\bsrc=["']\/assets\/[^"']+["'][^>]*>.*?<\/script>/gi) || [];
+                    const links = indexHtml.match(/<link\b[^>]*?\bhref=["']\/assets\/[^"']+["'][^>]*>/gi) || [];
+                    discoveredAssets = [...scripts, ...links];
+                    console.log(`[Vercel] Discovered ${discoveredAssets.length} production assets.`);
                 } catch (e) {
                     console.error('[Vercel] Asset discovery failed:', e);
                 }
@@ -98,22 +113,24 @@ export async function initApp() {
 
                 reply.header('Content-Security-Policy', csp);
 
+                // Only inject into HTML pages
                 if (typeof payload === 'string' && payload.includes('<head>')) {
                     let processedPayload = payload;
 
-                    // A. Cleanup broken Moria defaults
-                    processedPayload = processedPayload.replace(/<script[^>]+src="[^"]*entry-client\.js"[^>]*><\/script>/g, '');
+                    // A. Cleanup broken Moria defaults (hardcoded non-hashed paths)
+                    processedPayload = processedPayload.replace(/<script[^>]+src="\/assets\/entry-client\.js"[^>]*><\/script>/gi, '');
 
-                    // B. Inject discovered assets
+                    // B. Inject discovered assets ONLY if we found them
                     let headInjection = '';
-                    if (productionAssets) {
-                        // Remove existing /assets/ links to avoid duplicates
-                        processedPayload = processedPayload.replace(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/g, '');
-                        headInjection += `    ${productionAssets}\n`;
+                    if (discoveredAssets.length > 0) {
+                        // Avoid double injection: Remove tags matching our discovered ones if they already exist
+                        // (Moria renderer might have tried to inject some)
+                        headInjection += '    ' + discoveredAssets.join('\n    ') + '\n';
                     }
 
-                    // C. Styles.css fallback
-                    if (!processedPayload.includes('styles.css') && !headInjection.includes('styles.css')) {
+                    // C. Styles.css fallback if not in discoveredAssets
+                    const hasStyles = processedPayload.includes('styles.css') || headInjection.includes('styles.css');
+                    if (!hasStyles) {
                         headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
                     }
 
@@ -144,14 +161,15 @@ export async function initApp() {
             const searchPaths = [
                 path.resolve(projectRoot, config.routes?.dir ?? 'src/routes'),
                 path.resolve(projectRoot, 'src/routes'),
-                path.resolve(__dirname, 'routes')
+                path.resolve(__dirname, 'routes'),
+                path.resolve(__dirname, '..', 'src', 'routes')
             ];
 
             let routesRegistered = false;
             let lastError: any = null;
             for (const routesDir of searchPaths) {
                 if (fs.existsSync(routesDir)) {
-                    console.log(`[Vercel] Registering from: ${routesDir}`);
+                    console.log(`[Vercel] Registering routes from: ${routesDir}`);
                     try {
                         await registerRoutes(app.server, routesDir, {
                             mode: isProd ? 'production' : 'development',
@@ -176,7 +194,7 @@ export async function initApp() {
                             const fullPath = path.join(dir, file);
                             const stats = fs.statSync(fullPath);
                             return { name: file, type: stats.isDirectory() ? 'dir' : 'file', size: stats.size };
-                        }).slice(0, 20);
+                        }).slice(0, 50);
                     } catch (e) { return [{ error: String(e) }]; }
                 };
 
@@ -184,7 +202,7 @@ export async function initApp() {
                     timestamp: new Date().toISOString(),
                     isProd,
                     cwd: process.cwd(),
-                    productionAssets,
+                    discoveredAssets,
                     routesRegistered,
                     lastError: lastError ? lastError.message : null,
                     fs: {
@@ -192,7 +210,8 @@ export async function initApp() {
                         src: listFiles(path.join(projectRoot, 'src')),
                         routes: listFiles(path.join(projectRoot, 'src/routes')),
                         public: listFiles(publicDir),
-                        dist: listFiles(clientDir)
+                        dist: listFiles(clientDir),
+                        assets: listFiles(assetsDir)
                     },
                     routes: app.server.printRoutes()
                 };
