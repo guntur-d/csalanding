@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@fastify/cookie':
+        specifier: ^11.0.0
+        version: 11.0.2
       '@moriajs/auth':
         specifier: 0.4.13
         version: 0.4.13(@moriajs/core@0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0))
@@ -26,6 +29,9 @@ importers:
       dotenv:
         specifier: ^17.3.1
         version: 17.3.1
+      fastify:
+        specifier: ^5.0.0
+        version: 5.7.4
       mithril:
         specifier: ^2.3.8
         version: 2.3.8
@@ -33,9 +39,6 @@ importers:
         specifier: ^6.10.0
         version: 6.21.0
     devDependencies:
-      '@fastify/cookie':
-        specifier: ^11.0.0
-        version: 11.0.2
       '@moriajs/cli':
         specifier: 0.4.13
         version: 0.4.13(@event-driven-io/dumbo@0.12.7(@types/pg@8.16.0)(@types/uuid@10.0.0)(pg-connection-string@2.11.0)(pg@8.18.0)(uuid@10.0.0))(@moriajs/renderer@0.4.13)(@types/mongodb@4.0.7)(@types/node@22.19.11)(@types/pg@8.16.0)(@types/uuid@10.0.0)(ansis@3.17.0)(cli-table3@0.6.5)(commander@12.1.0)(pg-connection-string@2.11.0)(uuid@10.0.0)
@@ -45,9 +48,6 @@ importers:
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.11
-      fastify:
-        specifier: ^5.0.0
-        version: 5.7.4
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
