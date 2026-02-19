@@ -16,7 +16,7 @@
     ],
     "functions": {
         "api/index.ts": {
-            "includeFiles": "{dist,public,src/routes,package.json}/**",
+            "includeFiles": "{dist,public,src,package.json}/**",
             "maxDuration": 60
         }
     }
