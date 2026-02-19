@@ -8,8 +8,8 @@ meta.name = "referrer";
 meta.content = "origin";
 document.head.appendChild(meta);
 
-// Discover all page files
-const globbed = import.meta.glob('./routes/pages/**/*.{ts,js,mts,mjs}');
+// Discover all page files, excluding server-only files (starting with _)
+const globbed = import.meta.glob(['./routes/pages/**/*.{ts,js,mts,mjs}', '!./routes/pages/**/_*.{ts,js,mts,mjs}']);
 
 // Robustly map glob keys to the identifiers used by the MoriaJS server
 // e.g. "./routes/pages/admin/index.ts" -> "pages/admin/index.ts"
