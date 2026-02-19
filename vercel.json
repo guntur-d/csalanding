@@ -2,20 +2,12 @@
     "version": 2,
     "rewrites": [
         {
-            "source": "/assets/(.*)",
-            "destination": "/api"
-        },
-        {
-            "source": "/api/(.*)",
-            "destination": "/api"
-        },
-        {
-            "source": "/((?!api/|admin/|_moria/|assets/|styles\\.css|.*\\.jpg|.*\\.png|.*\\.pdf).*)$",
-            "destination": "/api"
+            "source": "/((?!serverless/|moria/|_moria/).*)",
+            "destination": "/serverless/index"
         }
     ],
     "functions": {
-        "api/index.ts": {
+        "serverless/index.ts": {
             "includeFiles": "{dist,public,src,package.json}/**",
             "maxDuration": 60
         }
