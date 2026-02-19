@@ -16,6 +16,11 @@ async function initApp() {
                 ...config,
                 mode: 'production',
                 rootDir: process.cwd(),
+            },
+            fastifyOptions: {
+                logger: {
+                    level: 'info'
+                }
             }
         });
 
