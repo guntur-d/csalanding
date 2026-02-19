@@ -21,12 +21,10 @@ export default {
     title: 'CSA Admin - Chandra Satria Agung',
     oninit: function (vnode: any) {
         const { serverData } = vnode.attrs;
-        if (typeof window !== 'undefined') {
-            console.log('[CMS] Hydrating admin page with serverData:', serverData);
-        }
         vnode.state.content = serverData?.content || {};
+        vnode.state.inquiries = [];
 
-        // Ensure nested objects exist (non-mutating)
+        // Ensure nested objects exist
         const ensure = (obj: any) => {
             const out = { ...obj };
             if (!out.hero) out.hero = {};
@@ -37,28 +35,31 @@ export default {
         };
 
         const rawContent = serverData?.content;
-        // True loading if NO data OR if it's the empty "ensured" shell from a previous SSR attempt
         vnode.state.loading = !rawContent || Object.keys(rawContent).length === 0 || !rawContent.hero?.title;
         vnode.state.content = ensure(rawContent || {});
 
         if (typeof window !== 'undefined') {
-            console.log('[CMS] oninit: loading=', vnode.state.loading, 'rawContentKeys=', rawContent ? Object.keys(rawContent).length : 0);
-        }
+            const fetchData = async () => {
+                try {
+                    // Fetch Content
+                    if (vnode.state.loading) {
+                        const response: any = await m.request({ method: "GET", url: "/api/content" });
+                        vnode.state.content = ensure(response || {});
+                        vnode.state.loading = false;
+                    }
 
-        if (typeof window !== 'undefined' && vnode.state.loading) {
-            console.log('[CMS] Fetching catch-up data via /api/content...');
-            m.request({
-                method: "GET",
-                url: "/api/content"
-            }).then((response: any) => {
-                console.log('[CMS] Fetch success:', response);
-                vnode.state.content = ensure(response || {});
-                vnode.state.loading = false;
-            }).catch((e: any) => {
-                console.error('[CMS] Fetch error:', e);
-                toast.error("Failed to load content");
-                vnode.state.loading = false;
-            });
+                    // Fetch Inquiries
+                    const inqs: any = await m.request({ method: "GET", url: "/api/inquiry" });
+                    vnode.state.inquiries = inqs || [];
+                } catch (e) {
+                    console.error('[CMS] Fetch error:', e);
+                    toast.error("Failed to load dashboard data");
+                    vnode.state.loading = false;
+                } finally {
+                    m.redraw();
+                }
+            };
+            fetchData();
         }
     },
 
@@ -80,13 +81,12 @@ export default {
     },
 
     logout: async function () {
-        // Clear cookie by calling a logout API or just expiry
         document.cookie = "admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         window.location.href = '/admin/login';
     },
 
     view: function (vnode: any) {
-        const { content, loading, saving } = vnode.state;
+        const { content, loading, saving, inquiries } = vnode.state;
 
         if (loading) {
             return m(".admin-loading", {
@@ -94,20 +94,14 @@ export default {
             }, "Initializing CMS...");
         }
 
-        // Log once per significant state
-        if (typeof window !== 'undefined' && !vnode.state.viewLogged) {
-            console.log('[CMS] Rendering admin view with content:', content);
-            vnode.state.viewLogged = true;
-        }
-
         return m(".admin-layout", {
-            style: "background: var(--admin-bg); min-height: 100vh; padding: 2rem; color: var(--text-main); font-family: 'Outfit', sans-serif; transition: var(--transition);"
+            style: "background: var(--admin-bg, #111); min-height: 100vh; padding: 2rem; color: var(--text-main, #fff); font-family: 'Outfit', sans-serif; transition: var(--transition);"
         }, [
             m(Toaster),
             m("header", { style: "display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; border-bottom: 1px solid #333; padding-bottom: 1.5rem;" }, [
                 m("div", [
                     m("h1", { style: "color: #c5a059; margin: 0; font-size: 1.8rem;" }, "CSA CMS Admin"),
-                    m("p", { style: "color: #888; margin: 0.5rem 0 0; font-size: 0.9rem;" }, "Manage your website content live")
+                    m("p", { style: "color: #888; margin: 0.5rem 0 0; font-size: 0.9rem;" }, "Manage your website content and inquiries")
                 ]),
                 m(".admin-actions", [
                     m("button", {
@@ -123,6 +117,31 @@ export default {
             ]),
 
             m(".admin-grid", { style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2.5rem;" }, [
+                // Inquiries Section (New)
+                m(".admin-card", { style: "background: #1a1a1a; padding: 2rem; border-radius: 15px; border: 1px solid #333; grid-column: 1 / -1;" }, [
+                    m("h2", { style: "color: #c5a059; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;" }, [
+                        "Visitor Inquiries",
+                        m("span", { style: "font-size: 0.8rem; background: #c5a059; color: #111; padding: 0.2rem 0.6rem; border-radius: 10px;" }, `${inquiries.length} entries`)
+                    ]),
+                    inquiries.length === 0 ? m("p", { style: "color: #666; font-style: italic;" }, "No inquiries yet...") :
+                        m(".table-container", { style: "overflow-x: auto;" },
+                            m("table", { style: "width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;" }, [
+                                m("thead", m("tr", { style: "color: #888; border-bottom: 1px solid #333;" }, [
+                                    m("th", { style: "padding: 1rem;" }, "Date"),
+                                    m("th", { style: "padding: 1rem;" }, "Name"),
+                                    m("th", { style: "padding: 1rem;" }, "Email"),
+                                    m("th", { style: "padding: 1rem;" }, "Message")
+                                ])),
+                                m("tbody", inquiries.map((inq: any) => m("tr", { style: "border-bottom: 1px solid #222;" }, [
+                                    m("td", { style: "padding: 1rem; color: #888; white-space: nowrap;" }, new Date(inq.createdAt).toLocaleDateString()),
+                                    m("td", { style: "padding: 1rem; font-weight: 500;" }, inq.fullName),
+                                    m("td", { style: "padding: 1rem;" }, m("a", { href: `mailto:${inq.email}`, style: "color: #c5a059; text-decoration: none;" }, inq.email)),
+                                    m("td", { style: "padding: 1rem; color: #aaa; max-width: 300px;" }, inq.message)
+                                ])))
+                            ])
+                        )
+                ]),
+
                 // Hero Section
                 m(".admin-card", { style: "background: #1a1a1a; padding: 2rem; border-radius: 15px; border: 1px solid #333;" }, [
                     m("h2", { style: "color: #c5a059; margin-bottom: 2rem; border-bottom: 1px solid #333; padding-bottom: 1rem;" }, "Hero Section"),
