@@ -126,44 +126,33 @@ export async function initApp() {
             });
 
             // C. Asset Injection (Post-rendering)
-            app.server.addHook('onSend', async (request, reply, payload) => {
-                const csp = [
-                    "default-src 'self' https://www.youtube.com https://youtube.com",
-                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com https://youtube.com",
-                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-                    "img-src 'self' data: https://i.ytimg.com",
-                    "frame-src 'self' https://www.youtube.com https://youtube.com",
-                    "connect-src 'self' ws://localhost:* wss://localhost:*",
-                    "font-src 'self' data: https://fonts.gstatic.com"
-                ].join('; ');
+            // C. Asset Injection Helper
+            const injectAssets = (html: string) => {
+                let processedPayload = html;
 
-                reply.header('Content-Security-Policy', csp);
+                // Cleanup broken defaults
+                processedPayload = processedPayload.replace(/<script[^>]+src="\/assets\/entry-client\.js"[^>]*><\/script>/gi, '');
 
-                if (typeof payload === 'string' && payload.includes('<head>')) {
-                    let processedPayload = payload;
-
-                    // Cleanup broken defaults
-                    processedPayload = processedPayload.replace(/<script[^>]+src="\/assets\/entry-client\.js"[^>]*><\/script>/gi, '');
-
-                    // Inject discovered assets
-                    let headInjection = '';
-                    if (discoveredAssets.length > 0) {
-                        processedPayload = processedPayload.replace(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/gi, '');
-                        headInjection += '    ' + discoveredAssets.join('\n    ') + '\n';
-                    }
-
-                    // Styles.css fallback
-                    if (!processedPayload.includes('styles.css') && !headInjection.includes('styles.css')) {
-                        headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
-                    }
-
-                    if (headInjection) {
-                        processedPayload = processedPayload.replace('<head>', '<head>\n' + headInjection);
-                    }
-                    return processedPayload;
+                // Inject discovered assets
+                let headInjection = '';
+                if (discoveredAssets.length > 0) {
+                    // Remove duplicate links if any
+                    processedPayload = processedPayload.replace(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/gi, '');
+                    headInjection += '    ' + discoveredAssets.join('\n    ') + '\n';
                 }
-                return payload;
-            });
+
+                // Styles.css fallback
+                if (!processedPayload.includes('styles.css') && !headInjection.includes('styles.css')) {
+                    headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
+                }
+
+                if (headInjection) {
+                    processedPayload = processedPayload.replace('<head>', '<head>\n' + headInjection);
+                }
+                return processedPayload;
+            };
+
+
 
             // 5. Plugins & MANUEL Route Registration (Bypassing filesystem scanner for Vercel)
             try {
@@ -173,18 +162,49 @@ export async function initApp() {
 
             // Helper for registering Mithril Pages
             const registerPage = (path: string, componentModule: any, middleware?: any) => {
-                console.log(`[Vercel] Registering Manual Route: ${path}`);
+                console.log(`[Vercel] Registering Manual Route: ${path}`, Object.keys(componentModule));
+
                 const handler = async (req: any, reply: any) => {
-                    const data = componentModule.getServerData ? await componentModule.getServerData(req) : {};
-                    const html = await renderToString(componentModule.default, {
-                        title: componentModule.default.title || 'CSA Marketing',
-                        mode: isProd ? 'production' : 'development',
-                        initialData: {
-                            ...data,
-                            _moria_page: path // Critical for client hydration
+                    console.log(`[Vercel] Handling request for: ${path}`);
+                    try {
+                        // CSP Headers
+                        const csp = [
+                            "default-src 'self' https://www.youtube.com https://youtube.com",
+                            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com https://youtube.com",
+                            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                            "img-src 'self' data: https://i.ytimg.com",
+                            "frame-src 'self' https://www.youtube.com https://youtube.com",
+                            "connect-src 'self' ws://localhost:* wss://localhost:*",
+                            "font-src 'self' data: https://fonts.gstatic.com"
+                        ].join('; ');
+                        reply.header('Content-Security-Policy', csp);
+
+                        if (!componentModule.default) {
+                            throw new Error(`Component default export missing for ${path}`);
                         }
-                    });
-                    reply.type('text/html').send(html);
+
+                        console.log(`[Vercel] Fetching server data for ${path}...`);
+                        const data = componentModule.getServerData ? await componentModule.getServerData(req) : {};
+
+                        console.log(`[Vercel] Rendering ${path}...`);
+                        const rawHtml = await renderToString(componentModule.default, {
+                            title: componentModule.default.title || 'CSA Marketing',
+                            mode: isProd ? 'production' : 'development',
+                            initialData: {
+                                ...data,
+                                _moria_page: path
+                            }
+                        });
+
+                        const finalHtml = injectAssets(rawHtml);
+
+                        console.log(`[Vercel] Render complete (${finalHtml.length} bytes). Returning response.`);
+                        reply.type('text/html');
+                        return finalHtml;
+                    } catch (err: any) {
+                        console.error(`[Vercel] Handler Error for ${path}:`, err);
+                        return reply.status(500).send(`Server Error: ${err.message}`);
+                    }
                 };
 
                 if (middleware) {
@@ -198,6 +218,11 @@ export async function initApp() {
             registerPage('/', HomeRoute);
             registerPage('/admin', AdminRoute, AdminMiddleware);
             registerPage('/admin/login', AdminLoginRoute);
+
+            // Simple Test Route
+            app.server.get('/vercel-test', async (req, reply) => {
+                return { status: 'ok', message: 'Bridge is working' };
+            });
 
             // Register API
             console.log('[Vercel] Registering Manual API Routes');
@@ -260,14 +285,13 @@ if (!isVercelRuntime) {
     }).catch(console.error);
 }
 
-export default async (req: any, res: any) => {
-    try {
-        const instance = await initApp();
+export default (req: any, res: any) => {
+    initApp().then(instance => {
         instance.server.server.emit('request', req, res);
-    } catch (e: any) {
+    }).catch((e: any) => {
         console.error('[Vercel] Handler Crash:', e);
         res.statusCode = 500;
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ error: 'Bridge Initialisation Failed', message: e.message }));
-    }
+    });
 };

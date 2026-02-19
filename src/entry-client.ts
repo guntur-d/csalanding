@@ -8,19 +8,35 @@ meta.content = "origin";
 document.head.appendChild(meta);
 
 // Discover all page files, excluding server-only files (starting with _)
-const globbed = import.meta.glob(['./routes/pages/**/*.{ts,js,mts,mjs}', '!./routes/pages/**/_*.{ts,js,mts,mjs}']);
+const globbed = import.meta.glob(['./routes/**/*.{ts,js,mts,mjs}', '!./routes/**/_*.{ts,js,mts,mjs}', '!./routes/api/**']);
 
 // Robustly map glob keys to the identifiers used by the MoriaJS server
 // e.g. "./routes/pages/admin/index.ts" -> "pages/admin/index.ts"
 // and handles both .ts and .js since the server might report either
 const pages: Record<string, () => Promise<any>> = {};
 for (const [key, loader] of Object.entries(globbed)) {
-    const normalized = key.replace('./routes/', '');
-    pages[normalized] = loader as any;
+    // 1. Standard file path (e.g. "admin/login.ts")
+    const relativePath = key.replace('./routes/', '');
+    pages[relativePath] = loader as any;
 
-    // Also include .js version for matching if server reports as .js
-    if (normalized.endsWith('.ts')) {
-        pages[normalized.replace(/\.ts$/, '.js')] = loader as any;
+    // 2. JS Extension compatibility (e.g. "admin/login.js")
+    if (relativePath.endsWith('.ts')) {
+        pages[relativePath.replace(/\.ts$/, '.js')] = loader as any;
+    }
+
+    // 3. URL-style matching (Critical for path matching against server's _moria_page)
+    // Remove extension
+    const token = relativePath.replace(/\.(ts|js|mts|mjs)$/, ''); // "admin/login", "index"
+
+    // Add exact match (e.g. "/admin/login")
+    pages['/' + token] = loader as any;
+
+    // Add index aliases
+    if (token.endsWith('/index')) {
+        const folder = token.replace(/\/index$/, '');
+        pages['/' + folder] = loader as any; // "/admin"
+    } else if (token === 'index') {
+        pages['/'] = loader as any; // "/"
     }
 }
 
