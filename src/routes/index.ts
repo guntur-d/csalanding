@@ -1,10 +1,10 @@
 import m from 'mithril';
-import { Navigation } from '../../components/Navigation.js';
-import { Hero } from '../../components/Hero.js';
-import { About } from '../../components/About.js';
-import { Projects } from '../../components/Projects.js';
-import { Contact } from '../../components/Contact.js';
-import { Footer } from '../../components/Footer.js';
+import { Navigation } from '../components/Navigation.js';
+import { Hero } from '../components/Hero.js';
+import { About } from '../components/About.js';
+import { Projects } from '../components/Projects.js';
+import { Contact } from '../components/Contact.js';
+import { Footer } from '../components/Footer.js';
 
 export async function getServerData(request: any) {
     const db = (request.server as any).db;
