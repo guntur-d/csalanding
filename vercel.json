@@ -12,7 +12,7 @@
     ],
     "functions": {
         "api/index.ts": {
-            "includeFiles": "src/routes/**"
+            "includeFiles": "src/routes/**/*"
         }
     }
 }

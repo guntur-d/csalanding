@@ -17,6 +17,29 @@ const projectRoot = process.cwd();
 let app: any;
 
 /**
+ * Recursive directory listing for debugging
+ */
+function listFiles(dir: string, depth = 0): string[] {
+    if (depth > 2) return [];
+    try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        let results: string[] = [];
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                results.push(`DIR: ${fullPath}`);
+                results = results.concat(listFiles(fullPath, depth + 1));
+            } else {
+                results.push(`FILE: ${fullPath}`);
+            }
+        }
+        return results;
+    } catch (e) {
+        return [`ERROR listing ${dir}: ${e}`];
+    }
+}
+
+/**
  * Initialize the MoriaJS application.
  */
 export async function initApp() {
@@ -25,10 +48,13 @@ export async function initApp() {
     console.log(`[Vercel] __dirname: ${__dirname}`);
     console.log(`[Vercel] projectRoot (cwd): ${projectRoot}`);
 
+    // Diagnostic Scan
+    console.log('[Vercel] FS Scan:', JSON.stringify(listFiles(projectRoot).slice(0, 100)));
+
     app = await createApp({
         config: {
             ...config,
-            // Omit database and auth to prevent auto-registration crash on Vercel
+            // Omit database and auth from config to prevent auto-registration crash
             database: undefined,
             auth: undefined,
             mode: 'production',
@@ -41,67 +67,59 @@ export async function initApp() {
         }
     });
 
-    // Add immediate debug route to verify Fastify is alive
+    // Add immediate debug route
     app.server.get('/vercel-debug', async () => ({
         status: 'UP',
         cwd: process.cwd(),
         dirname: __dirname,
         projectRoot,
-        configPaths: {
-            routes: config.routes?.dir,
-            rootDir: config.rootDir
-        }
+        scan: listFiles(projectRoot).slice(0, 200)
     }));
 
-    // Manually register plugins because auto-registration fails on Vercel
+    // Manually register plugins
     if (config.database) {
         console.log('[Vercel] Manually registering @moriajs/db');
-        try {
-            await app.use(createDatabasePlugin(config.database as any));
-        } catch (e) {
-            console.error('[Vercel] DB Plugin Registration Failed:', e);
-        }
+        await app.use(createDatabasePlugin(config.database as any));
     }
     if (config.auth) {
         console.log('[Vercel] Manually registering @moriajs/auth');
-        try {
-            await app.use(createAuthPlugin({
-                ...config.auth,
-                secret: config.auth.secret || 'dev-secret-key-csa'
-            } as any));
-        } catch (e) {
-            console.error('[Vercel] Auth Plugin Registration Failed:', e);
-        }
+        await app.use(createAuthPlugin({
+            ...config.auth,
+            secret: config.auth.secret || 'dev-secret-key-csa'
+        } as any));
     }
 
     // Manually register routes
-    const routesDir = path.resolve(projectRoot, config.routes?.dir ?? 'src/routes');
+    // Try multiple possible locations for routes in Vercel bundle
+    const possibleRoutesDirs = [
+        path.resolve(projectRoot, 'src/routes'),
+        path.resolve(projectRoot, 'routes'),
+        path.resolve(__dirname, 'routes'),
+        path.resolve(__dirname, '../src/routes')
+    ];
 
-    if (fs.existsSync(routesDir)) {
-        console.log(`[Vercel] Registering routes from: ${routesDir}`);
-        try {
-            const files = fs.readdirSync(routesDir, { recursive: true });
-            console.log(`[Vercel] Route files found: ${JSON.stringify(files)}`);
-        } catch (e) {
-            console.error(`[Vercel] Failed to list routesDir: ${e}`);
+    let targetDir = '';
+    for (const dir of possibleRoutesDirs) {
+        if (fs.existsSync(dir)) {
+            targetDir = dir;
+            break;
         }
+    }
 
+    if (targetDir) {
+        console.log(`[Vercel] Registering routes from: ${targetDir}`);
         try {
-            await registerRoutes(app.server, routesDir, {
+            await registerRoutes(app.server, targetDir, {
                 mode: 'production',
                 config,
                 vite: undefined
             });
+            console.log('[Vercel] Routes registered successfully');
         } catch (e) {
             console.error('[Vercel] registerRoutes Failed:', e);
         }
     } else {
-        console.error(`[Vercel] ROUTES DIRECTORY NOT FOUND: ${routesDir}`);
-        try {
-            // Log structure to help find where it is
-            const scan = fs.readdirSync(projectRoot, { recursive: true }).slice(0, 50);
-            console.log(`[Vercel] Root scan (partial): ${JSON.stringify(scan)}`);
-        } catch (e) { }
+        console.error(`[Vercel] NO ROUTES DIRECTORY FOUND! Tried: ${JSON.stringify(possibleRoutesDirs)}`);
     }
 
     await app.server.ready();
@@ -120,10 +138,8 @@ if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
 export default async (req: any, res: any) => {
     try {
         const instance = await initApp();
-        // Use nextTick to ensure everything is settled before emitting
-        process.nextTick(() => {
-            instance.server.server.emit('request', req, res);
-        });
+        // REMOVED nextTick - it causes Vercel to terminate before Fastify can respond
+        instance.server.server.emit('request', req, res);
     } catch (e: any) {
         res.statusCode = 500;
         res.setHeader('Content-Type', 'application/json');
