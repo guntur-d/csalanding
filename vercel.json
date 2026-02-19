@@ -8,10 +8,6 @@
         {
             "source": "/((?!api/|admin/|_moria/|styles\\.css|favicon\\.ico|.*\\.jpg|.*\\.png|.*\\.pdf).*)$",
             "destination": "/api"
-        },
-        {
-            "source": "/(index\\.html)?",
-            "destination": "/api"
         }
     ],
     "functions": {
