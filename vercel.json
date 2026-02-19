@@ -6,13 +6,17 @@
             "destination": "/dist/client/assets/$1"
         },
         {
-            "source": "/(.*)",
+            "source": "/((?!api/|admin/|_moria/|styles\\.css|favicon\\.ico|.*\\.jpg|.*\\.png|.*\\.pdf).*)$",
+            "destination": "/api"
+        },
+        {
+            "source": "/(index\\.html)?",
             "destination": "/api"
         }
     ],
     "functions": {
         "api/index.ts": {
-            "includeFiles": "src/routes/**/*"
+            "includeFiles": "src/routes/**"
         }
     }
 }

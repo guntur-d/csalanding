@@ -22,6 +22,7 @@ export async function getServerData(request: any) {
 }
 
 export default {
+    title: 'Chandra Satria Agung',
     view: function (vnode: any) {
         // MoriaJS passes getServerData results into attrs.serverData
         const { serverData } = vnode.attrs;

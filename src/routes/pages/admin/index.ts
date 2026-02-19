@@ -18,6 +18,7 @@ export async function getServerData(request: any) {
 }
 
 export default {
+    title: 'CSA Admin - Chandra Satria Agung',
     oninit: function (vnode: any) {
         const { serverData } = vnode.attrs;
         if (typeof window !== 'undefined') {

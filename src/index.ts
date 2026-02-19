@@ -6,6 +6,7 @@ import config from '../moria.config.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import fastifyStatic from '@fastify/static';
 
 // Fix for TypeScript augmentations in serverless
 import '@fastify/cookie';
@@ -14,139 +15,167 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = process.cwd();
 
-let app: any;
-
 /**
- * Recursive directory listing for debugging
+ * Singleton Initialization Promise
+ * Uses globalThis to persist across hot-reloads in Vercel Dev.
  */
-function listFiles(dir: string, depth = 0): string[] {
-    if (depth > 2) return [];
-    try {
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-        let results: string[] = [];
-        for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name);
-            if (entry.isDirectory()) {
-                results.push(`DIR: ${fullPath}`);
-                results = results.concat(listFiles(fullPath, depth + 1));
-            } else {
-                results.push(`FILE: ${fullPath}`);
-            }
-        }
-        return results;
-    } catch (e) {
-        return [`ERROR listing ${dir}: ${e}`];
-    }
-}
+let initPromise: Promise<any> | null = (globalThis as any)._MORIA_INIT_PROMISE || null;
 
-/**
- * Initialize the MoriaJS application.
- */
 export async function initApp() {
-    if (app) return app;
+    if (initPromise) return initPromise;
 
-    console.log(`[Vercel] __dirname: ${__dirname}`);
-    console.log(`[Vercel] projectRoot (cwd): ${projectRoot}`);
+    initPromise = (async () => {
+        const isProd = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
+        console.log(`[Vercel] Singleton Initializing. Mode: ${isProd ? 'production' : 'development'}, CWD: ${projectRoot}`);
 
-    // Diagnostic Scan
-    console.log('[Vercel] FS Scan:', JSON.stringify(listFiles(projectRoot).slice(0, 100)));
-
-    app = await createApp({
-        config: {
-            ...config,
-            // Omit database and auth from config to prevent auto-registration crash
-            database: undefined,
-            auth: undefined,
-            mode: 'production',
-            rootDir: projectRoot,
-        },
-        fastifyOptions: {
-            logger: {
-                level: 'info'
+        const app = await createApp({
+            config: {
+                ...config,
+                database: undefined, // Manual registration below
+                auth: undefined,
+                mode: isProd ? 'production' : 'development',
+                rootDir: projectRoot,
+            },
+            fastifyOptions: {
+                logger: { level: 'info' }
             }
+        });
+
+        // 1. Static File Serving (Bridge for Vercel/Local consistency)
+        // Serve public folder for images, styles.css, etc.
+        const publicDir = path.resolve(projectRoot, 'public');
+        if (fs.existsSync(publicDir)) {
+            console.log(`[Vercel] Serving static files from ${publicDir}`);
+            await app.server.register(fastifyStatic, {
+                root: publicDir,
+                prefix: '/',
+                decorateReply: false // Don't conflict with potential second registration
+            });
         }
-    });
 
-    // Add immediate debug route
-    app.server.get('/vercel-debug', async () => ({
-        status: 'UP',
-        cwd: process.cwd(),
-        dirname: __dirname,
-        projectRoot,
-        scan: listFiles(projectRoot).slice(0, 200)
-    }));
-
-    // Manually register plugins
-    if (config.database) {
-        console.log('[Vercel] Manually registering @moriajs/db');
-        await app.use(createDatabasePlugin(config.database as any));
-    }
-    if (config.auth) {
-        console.log('[Vercel] Manually registering @moriajs/auth');
-        await app.use(createAuthPlugin({
-            ...config.auth,
-            secret: config.auth.secret || 'dev-secret-key-csa'
-        } as any));
-    }
-
-    // Manually register routes
-    // Try multiple possible locations for routes in Vercel bundle
-    const possibleRoutesDirs = [
-        path.resolve(projectRoot, 'src/routes'),
-        path.resolve(projectRoot, 'routes'),
-        path.resolve(__dirname, 'routes'),
-        path.resolve(__dirname, '../src/routes')
-    ];
-
-    let targetDir = '';
-    for (const dir of possibleRoutesDirs) {
-        if (fs.existsSync(dir)) {
-            targetDir = dir;
-            break;
+        // Serve dist/client for bundled assets
+        const clientDir = path.resolve(projectRoot, 'dist/client');
+        if (fs.existsSync(clientDir)) {
+            console.log(`[Vercel] Serving bundled client files from ${clientDir}`);
+            await app.server.register(fastifyStatic, {
+                root: clientDir,
+                prefix: '/dist/client/',
+                decorateReply: false
+            });
         }
-    }
 
-    if (targetDir) {
-        console.log(`[Vercel] Registering routes from: ${targetDir}`);
-        try {
-            await registerRoutes(app.server, targetDir, {
-                mode: 'production',
+        // 2. CSP Relaxation & Asset Injection Hook
+        app.server.addHook('onSend', async (request, reply, payload) => {
+            // Set a permissive CSP for external embeds and Moria hydration
+            const csp = [
+                "default-src 'self' https://www.youtube.com https://youtube.com",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com https://youtube.com",
+                "style-src 'self' 'unsafe-inline'",
+                "img-src 'self' data: https://i.ytimg.com",
+                "frame-src 'self' https://www.youtube.com https://youtube.com",
+                "connect-src 'self' ws://localhost:* wss://localhost:*", // Allow Vite HMR ws
+                "font-src 'self' data:"
+            ].join('; ');
+
+            reply.header('Content-Security-Policy', csp);
+
+            // Manual Asset Injection for Production Bridge
+            if (typeof payload === 'string' && payload.includes('<head>')) {
+                let headInjection = '';
+
+                // Inject styles.css if found in public
+                if (!payload.includes('styles.css') && fs.existsSync(path.join(publicDir, 'styles.css'))) {
+                    headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
+                }
+
+                // Inject hashed entry-client.js if found
+                if (!payload.includes('entry-client.js')) {
+                    const assetsDir = path.join(clientDir, 'assets');
+                    if (fs.existsSync(assetsDir)) {
+                        const files = fs.readdirSync(assetsDir);
+                        const entryFile = files.find(f => f.startsWith('index-') && f.endsWith('.js'));
+                        if (entryFile) {
+                            console.log(`[Vercel] Found hashed entry: ${entryFile}`);
+                            headInjection += `    <script type="module" src="/assets/${entryFile}"></script>\n`;
+                        }
+                    }
+                }
+
+                if (headInjection) {
+                    payload = payload.replace('<head>', '<head>\n' + headInjection);
+                }
+            }
+            return payload;
+        });
+
+        // 3. Manually register plugins
+        if (config.database) {
+            console.log('[Vercel] Registering @moriajs/db');
+            await app.use(createDatabasePlugin(config.database as any));
+        }
+        if (config.auth) {
+            console.log('[Vercel] Registering @moriajs/auth');
+            await app.use(createAuthPlugin({
+                ...config.auth,
+                secret: config.auth.secret || 'dev-secret-key-csa'
+            } as any));
+        }
+
+        // 4. Register file-based routes
+        const routesDir = path.resolve(projectRoot, config.routes?.dir ?? 'src/routes');
+        if (fs.existsSync(routesDir)) {
+            console.log(`[Vercel] Registering routes from ${routesDir}`);
+            await registerRoutes(app.server, routesDir, {
+                mode: isProd ? 'production' : 'development',
                 config,
                 vite: undefined
             });
-            console.log('[Vercel] Routes registered successfully');
-        } catch (e) {
-            console.error('[Vercel] registerRoutes Failed:', e);
         }
-    } else {
-        console.error(`[Vercel] NO ROUTES DIRECTORY FOUND! Tried: ${JSON.stringify(possibleRoutesDirs)}`);
-    }
 
-    await app.server.ready();
-    return app;
-}
+        await app.server.ready();
+        return app;
+    })();
 
-// Only run standalone if not in a serverless environment
-if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    const instance = await initApp();
-    await instance.listen();
+    (globalThis as any)._MORIA_INIT_PROMISE = initPromise;
+    return initPromise;
 }
 
 /**
- * Vercel / serverless handler.
+ * Standalone Mode Detection
+ * Strictly avoid listen() under Vercel Proxy (Production or Dev).
+ */
+const isVercelRuntime = !!(
+    process.env.VERCEL ||
+    process.env.VERCEL_ENV ||
+    process.env.NOW_REGION ||
+    process.env.VC_NODE_RUNTIME ||
+    process.env.FUNCTIONS_CONTROL_API
+);
+
+if (!isVercelRuntime) {
+    initApp().then(async (instance) => {
+        const port = config.server?.port || 3001;
+        const host = config.server?.host || '0.0.0.0';
+        try {
+            const addr = await instance.server.listen({ port, host });
+            console.log(`[Moria] Local Standalone Server: ${addr}`);
+        } catch (err: any) {
+            if (err.code !== 'EADDRINUSE') throw err;
+            console.log('[Moria] Standalone port in use, assuming dev is already running.');
+        }
+    }).catch(console.error);
+}
+
+/**
+ * Vercel Serverless Handler
  */
 export default async (req: any, res: any) => {
     try {
         const instance = await initApp();
-        // REMOVED nextTick - it causes Vercel to terminate before Fastify can respond
         instance.server.server.emit('request', req, res);
     } catch (e: any) {
+        console.error('[Vercel] Handler Crash:', e);
         res.statusCode = 500;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({
-            error: "MoriaJS Initialization Failed",
-            message: e.message,
-            stack: e.stack
-        }));
+        res.end(JSON.stringify({ error: e.message }));
     }
 };

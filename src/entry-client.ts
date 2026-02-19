@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-import '../styles.css';
 import { bootstrap } from '@moriajs/renderer';
 
 // Force referrer policy for YouTube embeds

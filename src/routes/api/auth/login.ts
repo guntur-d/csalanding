@@ -1,4 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import '@fastify/cookie';
 import crypto from 'node:crypto';
 
 export async function POST(request: FastifyRequest, reply: FastifyReply) {

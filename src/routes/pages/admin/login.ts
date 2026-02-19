@@ -2,6 +2,7 @@ import m from 'mithril';
 import { toast, Toaster } from '@moriajs/ui';
 
 export default {
+    title: 'CSA Login - Chandra Satria Agung',
     password: '',
     loading: false,
 
