@@ -38,6 +38,9 @@ importers:
       mithril:
         specifier: ^2.3.8
         version: 2.3.8
+      mithril-node-render:
+        specifier: ^3.0.2
+        version: 3.0.2(mithril@2.3.8)
       mongodb:
         specifier: ^6.10.0
         version: 6.21.0

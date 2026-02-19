@@ -19,6 +19,7 @@
     "dotenv": "^17.3.1",
     "fastify": "5.6.1",
     "mithril": "^2.3.8",
+    "mithril-node-render": "^3.0.2",
     "mongodb": "^6.10.0"
   },
   "devDependencies": {
