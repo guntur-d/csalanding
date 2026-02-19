@@ -5,8 +5,7 @@ export const Projects = {
         const { content } = vnode.attrs;
         const images = content.images || ["1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg", "6.jpg", "7.jpg"];
         const videos = content.videos || [
-            "TXMGu2d8c8g", // Mithril.js Tutorial (Known working public video)
-            "9F3Jc5Xe4w8", // Original video (potentially restricted)
+            "9F3Jc5Xe4w8", // Original video
         ];
 
         const getYoutubeId = (url: string) => {
