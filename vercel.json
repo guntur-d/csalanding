@@ -14,7 +14,7 @@
             "destination": "/public/styles.css"
         },
         {
-            "source": "/((?!assets/|public/|api/|moria/|_moria/|styles\\.css|favicon\\.ico|.*\\.jpg|.*\\.png|.*\\.pdf).*)",
+            "source": "/((?!assets/|public/|moria/|_moria/|styles\\.css|favicon\\.ico|.*\\.jpg|.*\\.png|.*\\.pdf).*)",
             "destination": "/api/index"
         }
     ],
