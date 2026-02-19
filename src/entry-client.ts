@@ -25,4 +25,6 @@ for (const [key, loader] of Object.entries(globbed)) {
     }
 }
 
-await bootstrap(pages as any);
+(async () => {
+    await bootstrap(pages as any);
+})();
