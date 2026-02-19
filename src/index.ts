@@ -44,17 +44,30 @@ export async function initApp() {
                 }
             });
 
-            // 1. Path Resolution
+            // 1. Path Resolution (Auto-detecting Vercel vs Local)
             const publicDir = path.resolve(projectRoot, 'public');
-            const clientDir = path.resolve(projectRoot, 'dist/client');
-            const assetsDir = path.resolve(clientDir, 'assets');
+
+            // Search for content root: dist/client (local) or dist (vercel)
+            const possibleContentRoots = [
+                path.resolve(projectRoot, 'dist/client'),
+                path.resolve(projectRoot, 'dist'),
+            ];
+
+            let contentDir = possibleContentRoots[0];
+            for (const r of possibleContentRoots) {
+                if (fs.existsSync(path.join(r, 'index.html'))) {
+                    contentDir = r;
+                    break;
+                }
+            }
+
+            const assetsDir = path.join(contentDir, 'assets');
+            console.log(`[Vercel] Resolved contentDir: ${contentDir}, assetsDir: ${assetsDir}`);
 
             // 2. Static File Serving (Root level)
-            // We register on / to handle public files (styles.css, images)
-            // We use decorateReply: true to enable reply.sendFile for our custom handler
             const staticRoots: string[] = [];
             if (fs.existsSync(publicDir)) staticRoots.push(publicDir);
-            if (fs.existsSync(clientDir)) staticRoots.push(clientDir);
+            if (fs.existsSync(contentDir)) staticRoots.push(contentDir);
 
             if (staticRoots.length > 0) {
                 console.log(`[Vercel] Mounting static roots: ${staticRoots.join(', ')}`);
@@ -68,18 +81,16 @@ export async function initApp() {
 
             // 3. Asset Discovery (Sync with hashed Vite assets)
             let discoveredAssets: string[] = [];
-            if (isProd) {
-                const indexHtmlPath = path.join(clientDir, 'index.html');
-                if (fs.existsSync(indexHtmlPath)) {
-                    try {
-                        const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
-                        const scripts = indexHtml.match(/<script\b[^>]*?\bsrc=["']\/assets\/[^"']+["'][^>]*>.*?<\/script>/gi) || [];
-                        const links = indexHtml.match(/<link\b[^>]*?\bhref=["']\/assets\/[^"']+["'][^>]*>/gi) || [];
-                        discoveredAssets = [...scripts, ...links];
-                        console.log(`[Vercel] Discovered ${discoveredAssets.length} production assets.`);
-                    } catch (e) {
-                        console.error('[Vercel] Asset discovery failed:', e);
-                    }
+            const indexHtmlPath = path.join(contentDir, 'index.html');
+            if (fs.existsSync(indexHtmlPath)) {
+                try {
+                    const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+                    const scripts = indexHtml.match(/<script\b[^>]*?\bsrc=["']\/assets\/[^"']+["'][^>]*>.*?<\/script>/gi) || [];
+                    const links = indexHtml.match(/<link\b[^>]*?\bhref=["']\/assets\/[^"']+["'][^>]*>/gi) || [];
+                    discoveredAssets = [...scripts, ...links];
+                    console.log(`[Vercel] Discovered ${discoveredAssets.length} production assets.`);
+                } catch (e) {
+                    console.error('[Vercel] Asset discovery failed:', e);
                 }
             }
 
@@ -89,15 +100,18 @@ export async function initApp() {
                 reply.removeHeader('Content-Security-Policy');
             });
 
-            // B. Assets Bypass (Fixes 404s caused by Moria's default /assets/ route)
+            // B. Assets Bypass (Fixes 404s caused by Moria's default /assets/ route or Vercel routing)
             app.server.addHook('onRequest', async (req, reply) => {
                 const url = req.url.split('?')[0];
                 if (url.startsWith('/assets/') && !url.includes('..')) {
                     const fileName = url.replace('/assets/', '');
+                    // Try to find the file in the resolved assets directory
                     const filePath = path.join(assetsDir, fileName);
                     if (fs.existsSync(filePath)) {
                         console.log(`[Vercel] Serving asset via bridge-bypass: ${fileName}`);
                         return reply.sendFile(fileName, assetsDir);
+                    } else {
+                        console.warn(`[Vercel] Asset not found at ${filePath}`);
                     }
                 }
             });
@@ -184,14 +198,16 @@ export async function initApp() {
                     timestamp: new Date().toISOString(),
                     isProd,
                     cwd: process.cwd(),
+                    contentDir,
+                    assetsDir,
                     discoveredAssets,
                     routesRegistered,
                     lastError: lastError ? lastError.message : null,
                     fs: {
                         root: listFiles(projectRoot),
-                        public: listFiles(publicDir),
-                        dist: listFiles(clientDir),
-                        assets: listFiles(assetsDir)
+                        dist: listFiles(path.join(projectRoot, 'dist')),
+                        client: listFiles(path.join(projectRoot, 'dist/client')),
+                        public: listFiles(publicDir)
                     },
                     routes: app.server.printRoutes()
                 };
