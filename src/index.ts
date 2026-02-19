@@ -43,24 +43,22 @@ export async function initApp() {
         });
 
         // 1. Static File Serving (Bridge for Vercel/Local consistency)
-        // Serve public folder for images, styles.css, etc.
+        // Combine multiple roots into a single registration to avoid route collisions (e.g. HEAD /*)
+        const staticRoots: string[] = [];
         const publicDir = path.resolve(projectRoot, 'public');
         if (fs.existsSync(publicDir)) {
-            console.log(`[Vercel] Mounting public static: ${publicDir}`);
-            await app.server.register(fastifyStatic, {
-                root: publicDir,
-                prefix: '/',
-                decorateReply: false
-            });
+            staticRoots.push(publicDir);
         }
-
-        // Serve dist/client for bundled assets
         const clientDir = path.resolve(projectRoot, 'dist/client');
         if (fs.existsSync(clientDir)) {
-            console.log(`[Vercel] Mounting bundled client: ${clientDir}`);
+            staticRoots.push(clientDir);
+        }
+
+        if (staticRoots.length > 0) {
+            console.log(`[Vercel] Mounting static roots: ${staticRoots.join(', ')}`);
             await app.server.register(fastifyStatic, {
-                root: clientDir,
-                prefix: '/', // Allow direct access to assets if needed, but primarily for NFT tracing
+                root: staticRoots,
+                prefix: '/',
                 decorateReply: false
             });
         }
