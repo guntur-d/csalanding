@@ -1,6 +1,7 @@
 {
   "name": "csa-marketing-website",
   "version": "1.0.0",
+  "packageManager": "pnpm@10.28.2",
   "type": "module",
   "scripts": {
     "dev": "moria dev",
