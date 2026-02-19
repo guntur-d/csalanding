@@ -43,28 +43,34 @@ export async function initApp() {
         });
 
         // 1. Static File Serving (Bridge for Vercel/Local consistency)
-        // Serve project root for images, styles.css, etc.
-        // We use a whitelist of extensions to be safe.
-        await app.server.register(fastifyStatic, {
-            root: projectRoot,
-            prefix: '/',
-            allowedPath: (path) => /\.(css|js|png|jpg|jpeg|gif|svg|ico|pdf|txt)$/.test(path),
-            decorateReply: false
-        });
+        // Serve public folder for images, styles.css, etc.
+        const publicDir = path.resolve(projectRoot, 'public');
+        if (fs.existsSync(publicDir)) {
+            console.log(`[Vercel] Mounting public static: ${publicDir}`);
+            await app.server.register(fastifyStatic, {
+                root: publicDir,
+                prefix: '/',
+                decorateReply: false
+            });
+        }
 
+        // Serve dist/client for bundled assets
         const clientDir = path.resolve(projectRoot, 'dist/client');
         if (fs.existsSync(clientDir)) {
-            console.log(`[Vercel] Mounting bundled: ${clientDir}`);
+            console.log(`[Vercel] Mounting bundled client: ${clientDir}`);
             await app.server.register(fastifyStatic, {
                 root: clientDir,
-                prefix: '/dist/client/',
+                prefix: '/', // Allow direct access to assets if needed, but primarily for NFT tracing
                 decorateReply: false
             });
         }
 
         // 2. CSP Relaxation & Asset Injection Hook
         app.server.addHook('onRequest', async (req, reply) => {
-            console.log(`[Vercel] Request: ${req.method} ${req.url}`);
+            // Log for debugging
+            if (req.url.includes('.css') || req.url.includes('.js') || req.url.includes('.jpg') || req.url.includes('.png')) {
+                console.log(`[Vercel] Asset Request: ${req.method} ${req.url}`);
+            }
             reply.removeHeader('Content-Security-Policy');
         });
 
@@ -84,25 +90,26 @@ export async function initApp() {
             if (typeof payload === 'string' && payload.includes('<head>')) {
                 let processedPayload = payload;
 
-                // Remove any broken/default entry-client.js tags Moria might have injected
+                // 1. Absolute styles.css injection
+                if (!processedPayload.includes('styles.css')) {
+                    processedPayload = processedPayload.replace('<head>', '<head>\n    <link rel="stylesheet" href="/styles.css">');
+                }
+
+                // 2. Cleanup and Absolute Hashed Entry Injection
+                // Remove ANY script that looks like entry-client (Moria default)
                 processedPayload = processedPayload.replace(/<script[^>]+src="[^"]*entry-client\.js"[^>]*><\/script>/g, '');
 
-                let headInjection = '';
-                if (!processedPayload.includes('styles.css')) {
-                    headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
-                }
                 const assetsDir = path.join(clientDir, 'assets');
                 if (fs.existsSync(assetsDir)) {
                     const files = fs.readdirSync(assetsDir);
                     const entryFile = files.find(f => f.startsWith('index-') && f.endsWith('.js'));
                     if (entryFile) {
-                        // Use an absolute path /dist/client/assets/ for reliability
-                        headInjection += `    <script type="module" src="/dist/client/assets/${entryFile}"></script>\n`;
+                        const entryPath = `/dist/client/assets/${entryFile}`;
+                        console.log(`[Vercel] Injecting absolute entry: ${entryPath}`);
+                        processedPayload = processedPayload.replace('<head>', `<head>\n    <script type="module" src="${entryPath}"></script>`);
                     }
                 }
-                if (headInjection) {
-                    processedPayload = processedPayload.replace('<head>', '<head>\n' + headInjection);
-                }
+
                 return processedPayload;
             }
             return payload;
@@ -122,18 +129,16 @@ export async function initApp() {
         }
 
         // 4. Robust Route Registration
-        // Try multiple locations for routes since Vercel's bundling can move them
         const searchPaths = [
             path.resolve(projectRoot, config.routes?.dir ?? 'src/routes'),
             path.resolve(__dirname, 'routes'),
-            path.resolve(__dirname, '../src/routes'),
             path.resolve(__dirname, '..', 'src', 'routes')
         ];
 
         let foundRoutes = false;
         for (const routesDir of searchPaths) {
             if (fs.existsSync(routesDir)) {
-                console.log(`[Vercel] Found routes at: ${routesDir}`);
+                console.log(`[Vercel] Registering routes from: ${routesDir}`);
                 await registerRoutes(app.server, routesDir, {
                     mode: isProd ? 'production' : 'development',
                     config,
@@ -144,40 +149,15 @@ export async function initApp() {
             }
         }
 
-        if (!foundRoutes) {
-            console.error(`[Vercel] CRITICAL: No routes directory found in: ${searchPaths.join(', ')}`);
-        }
-
         // Diagnostic route
         app.server.get('/vercel-debug', async () => {
-            const listFiles = (dir: string, depth = 0): string[] => {
-                if (depth > 2 || !fs.existsSync(dir)) return [];
-                const files = fs.readdirSync(dir);
-                let res: string[] = [];
-                for (const f of files) {
-                    const p = path.join(dir, f);
-                    try {
-                        const stat = fs.statSync(p);
-                        if (stat.isDirectory()) {
-                            res.push(`DIR: ${p}`);
-                            res = res.concat(listFiles(p, depth + 1));
-                        } else {
-                            res.push(`FILE: ${p}`);
-                        }
-                    } catch (e) { res.push(`ERROR: ${p}`); }
-                }
-                return res;
-            };
-
             return {
                 timestamp: new Date().toISOString(),
                 isProd,
-                env: process.env.NODE_ENV,
                 cwd: process.cwd(),
                 dirname: __dirname,
                 searchPaths,
                 foundRoutes,
-                fsRoot: listFiles(projectRoot),
                 routes: app.server.printRoutes()
             };
         });
@@ -204,10 +184,9 @@ if (!isVercelRuntime) {
         const host = config.server?.host || '0.0.0.0';
         try {
             const addr = await instance.server.listen({ port, host });
-            console.log(`[Moria] Local Standalone Server: ${addr}`);
+            console.log(`[Moria] Standalone Server: ${addr}`);
         } catch (err: any) {
             if (err.code !== 'EADDRINUSE') throw err;
-            console.log('[Moria] Standalone port in use.');
         }
     }).catch(console.error);
 }
@@ -222,6 +201,6 @@ export default async (req: any, res: any) => {
     } catch (e: any) {
         console.error('[Vercel] Handler Crash:', e);
         res.statusCode = 500;
-        res.end(JSON.stringify({ error: e.message, stack: e.stack }));
+        res.end(JSON.stringify({ error: e.message }));
     }
 };
