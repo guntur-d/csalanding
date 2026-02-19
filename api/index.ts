@@ -1,3 +1,4 @@
+import 'fastify';
 import { createApp } from '@moriajs/core';
 import { createDatabasePlugin } from '@moriajs/db';
 import { createAuthPlugin } from '@moriajs/auth';

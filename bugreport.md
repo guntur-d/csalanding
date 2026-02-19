@@ -283,3 +283,15 @@ if (config.auth) {
     await app.use(createAuthPlugin(config.auth));
 }
 ```
+
+---
+
+## 🚀 ENHANCEMENT: 14. Official Vercel Deployment Support
+- **Status**: Suggested / Implementation Pattern
+- **Description**: Currently, MoriaJS doesn't have a built-in "Vercel" target. Deploying a MoriaJS SSR app as a static site results in 404s.
+- **Proposed Solution**: Include a standard Vercel bridge pattern in the framework or CLI.
+    - **vercel.json**: Automatic generation of rewrites for static assets.
+    - **Serverless Bridge**: Provide a `createVercelHandler(app)` utility to simplify bridging Fastify to Vercel Functions.
+- **Implementation (Reference)**:
+    - Create `api/index.ts` to wrap `createApp()`.
+    - Export a handler that emits the request to `app.server.server`.
