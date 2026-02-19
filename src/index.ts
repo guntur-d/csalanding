@@ -39,11 +39,12 @@ export async function initApp() {
                     rootDir: projectRoot,
                 },
                 fastifyOptions: {
-                    logger: { level: 'info' }
+                    logger: { level: 'info' },
+                    disableRequestLogging: !isProd
                 }
             });
 
-            // 1. Static File Serving (Bridge for Vercel/Local consistency)
+            // 1. Static File Serving
             const staticRoots: string[] = [];
             const publicDir = path.resolve(projectRoot, 'public');
             if (fs.existsSync(publicDir)) {
@@ -60,24 +61,22 @@ export async function initApp() {
                     root: staticRoots,
                     prefix: '/',
                     decorateReply: false,
-                    index: false // Don't serve index.html for root, let Moria handle it
+                    index: false
                 });
             }
 
-            // 2. Discover correctly hashed assets from dist/client/index.html
+            // 2. Discover correctly hashed assets
             let productionAssets = '';
-            if (isProd) {
-                const indexHtmlPath = path.join(clientDir, 'index.html');
-                if (fs.existsSync(indexHtmlPath)) {
-                    try {
-                        const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
-                        const scriptMatches = indexHtml.match(/<script[^>]+src="\/assets\/[^"]+"[^>]*><\/script>/g) || [];
-                        const linkMatches = indexHtml.match(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/g) || [];
-                        productionAssets = [...scriptMatches, ...linkMatches].join('\n    ');
-                        console.log(`[Vercel] Discovered production assets.`);
-                    } catch (e) {
-                        console.error('[Vercel] Asset discovery failed:', e);
-                    }
+            const indexHtmlPath = path.join(clientDir, 'index.html');
+            if (fs.existsSync(indexHtmlPath)) {
+                try {
+                    const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+                    const scriptMatches = indexHtml.match(/<script[^>]+src="\/assets\/[^"]+"[^>]*><\/script>/g) || [];
+                    const linkMatches = indexHtml.match(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/g) || [];
+                    productionAssets = [...scriptMatches, ...linkMatches].join('\n    ');
+                    console.log(`[Vercel] Discovered ${scriptMatches.length} scripts and ${linkMatches.length} links.`);
+                } catch (e) {
+                    console.error('[Vercel] Asset discovery failed:', e);
                 }
             }
 
@@ -108,12 +107,12 @@ export async function initApp() {
                     // B. Inject discovered assets
                     let headInjection = '';
                     if (productionAssets) {
-                        // Remove existing assets to avoid duplicates
+                        // Remove existing /assets/ links to avoid duplicates
                         processedPayload = processedPayload.replace(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/g, '');
                         headInjection += `    ${productionAssets}\n`;
                     }
 
-                    // C. Styles.css fallback if not in productionAssets
+                    // C. Styles.css fallback
                     if (!processedPayload.includes('styles.css') && !headInjection.includes('styles.css')) {
                         headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
                     }
@@ -126,34 +125,33 @@ export async function initApp() {
                 return payload;
             });
 
-            // 4. Register plugins with error isolation
+            // 4. Register plugins
             try {
                 if (config.database) {
-                    console.log('[Vercel] Registering DB plugin');
                     await app.use(createDatabasePlugin(config.database as any));
                 }
                 if (config.auth) {
-                    console.log('[Vercel] Registering Auth plugin');
                     await app.use(createAuthPlugin({
                         ...config.auth,
                         secret: config.auth.secret || 'dev-secret-key-csa'
                     } as any));
                 }
             } catch (pluginError) {
-                console.error('[Vercel] Plugin registration failed:', pluginError);
+                console.error('[Vercel] Plugin failure:', pluginError);
             }
 
-            // 5. Robust Route Registration
+            // 5. Route Registration
             const searchPaths = [
                 path.resolve(projectRoot, config.routes?.dir ?? 'src/routes'),
-                path.resolve(__dirname, 'routes'),
-                path.resolve(__dirname, '..', 'src', 'routes')
+                path.resolve(projectRoot, 'src/routes'),
+                path.resolve(__dirname, 'routes')
             ];
 
             let routesRegistered = false;
+            let lastError: any = null;
             for (const routesDir of searchPaths) {
                 if (fs.existsSync(routesDir)) {
-                    console.log(`[Vercel] Registering routes from: ${routesDir}`);
+                    console.log(`[Vercel] Registering from: ${routesDir}`);
                     try {
                         await registerRoutes(app.server, routesDir, {
                             mode: isProd ? 'production' : 'development',
@@ -163,7 +161,8 @@ export async function initApp() {
                         routesRegistered = true;
                         break;
                     } catch (routeError) {
-                        console.error(`[Vercel] Failed to register routes from ${routesDir}:`, routeError);
+                        lastError = routeError;
+                        console.error(`[Vercel] Registration error:`, routeError);
                     }
                 }
             }
@@ -172,14 +171,13 @@ export async function initApp() {
             app.server.get('/vercel-debug', async () => {
                 const listFiles = (dir: string): any[] => {
                     if (!fs.existsSync(dir)) return [];
-                    return fs.readdirSync(dir).map(file => {
-                        const fullPath = path.join(dir, file);
-                        const stats = fs.statSync(fullPath);
-                        if (stats.isDirectory()) {
-                            return { name: file, type: 'dir', children: listFiles(fullPath).slice(0, 10) }; // Cap for depth
-                        }
-                        return { name: file, type: 'file', size: stats.size };
-                    });
+                    try {
+                        return fs.readdirSync(dir).map(file => {
+                            const fullPath = path.join(dir, file);
+                            const stats = fs.statSync(fullPath);
+                            return { name: file, type: stats.isDirectory() ? 'dir' : 'file', size: stats.size };
+                        }).slice(0, 20);
+                    } catch (e) { return [{ error: String(e) }]; }
                 };
 
                 return {
@@ -188,7 +186,11 @@ export async function initApp() {
                     cwd: process.cwd(),
                     productionAssets,
                     routesRegistered,
+                    lastError: lastError ? lastError.message : null,
                     fs: {
+                        root: listFiles(projectRoot),
+                        src: listFiles(path.join(projectRoot, 'src')),
+                        routes: listFiles(path.join(projectRoot, 'src/routes')),
                         public: listFiles(publicDir),
                         dist: listFiles(clientDir)
                     },
@@ -198,8 +200,8 @@ export async function initApp() {
 
             await app.server.ready();
             return app;
-        } catch (initErr) {
-            console.error('[Vercel] Singleton Init Error:', initErr);
+        } catch (initErr: any) {
+            console.error('[Vercel] Singleton failure:', initErr);
             throw initErr;
         }
     })();
@@ -221,29 +223,21 @@ if (!isVercelRuntime) {
         const port = config.server?.port || 3001;
         const host = config.server?.host || '0.0.0.0';
         try {
-            const addr = await instance.server.listen({ port, host });
-            console.log(`[Moria] Standalone Server: ${addr}`);
+            await instance.server.listen({ port, host });
         } catch (err: any) {
             if (err.code !== 'EADDRINUSE') throw err;
         }
     }).catch(console.error);
 }
 
-/**
- * Vercel Serverless Handler
- */
 export default async (req: any, res: any) => {
     try {
         const instance = await initApp();
         instance.server.server.emit('request', req, res);
     } catch (e: any) {
-        console.error('[Vercel] Lambda Handler Crash:', e);
+        console.error('[Vercel] Handler Crash:', e);
         res.statusCode = 500;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({
-            error: 'Bridge Critical Failure',
-            message: e.message,
-            stack: process.env.NODE_ENV === 'development' ? e.stack : undefined
-        }));
+        res.end(JSON.stringify({ error: 'Bridge Initialisation Failed', message: e.message }));
     }
 };

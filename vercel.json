@@ -2,23 +2,7 @@
     "version": 2,
     "rewrites": [
         {
-            "source": "/assets/(.*)",
-            "destination": "/dist/client/assets/$1"
-        },
-        {
-            "source": "/styles.css",
-            "destination": "/public/styles.css"
-        },
-        {
-            "source": "/(1|2|3|4|5|6|7)\\.jpg",
-            "destination": "/public/$1.jpg"
-        },
-        {
-            "source": "/FLYER%20RAJAPOLAH(.*)",
-            "destination": "/public/FLYER%20RAJAPOLAH$1"
-        },
-        {
-            "source": "/((?!api/|admin/|_moria/|assets/|styles\\.css|.*\\.jpg|.*\\.png|.*\\.pdf).*)$",
+            "source": "/((?!api/|_moria/).*)",
             "destination": "/api"
         }
     ],
