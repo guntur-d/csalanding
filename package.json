@@ -15,14 +15,15 @@
     "@moriajs/ui": "0.4.13",
     "dotenv": "^17.3.1",
     "mithril": "^2.3.8",
-    "mongodb": "^6.10.0"
+    "mongodb": "^6.10.0",
+    "fastify": "^5.0.0",
+    "@fastify/cookie": "^11.0.0"
   },
   "devDependencies": {
     "@moriajs/cli": "0.4.13",
     "@types/mithril": "^2.2.7",
     "@types/node": "^22.0.0",
-    "fastify": "^5.0.0",
-    "@fastify/cookie": "^11.0.0",
+    "@types/node": "^22.0.0",
     "typescript": "^5.7.0",
     "vite": "^6.0.0"
   }
