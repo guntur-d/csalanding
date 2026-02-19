@@ -31,3 +31,4 @@ https://www.youtube.com/watch?v=9F3Jc5Xe4w8
 
 Rajapolah images are all png and jpg format in root folder
 
+use mithriljs to create the website 

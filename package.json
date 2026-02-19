@@ -1,11 +1,29 @@
 {
   "name": "csa-marketing-website",
   "version": "1.0.0",
-  "description": "Marketing website for Chandra Satria Agung",
+  "type": "module",
   "scripts": {
-    "start": "npx serve ."
+    "dev": "moria dev",
+    "build": "moria build",
+    "start": "moria start"
   },
   "dependencies": {
-    "serve": "^14.2.4"
+    "@moriajs/auth": "0.4.12",
+    "@moriajs/core": "0.4.12",
+    "@moriajs/db": "0.4.12",
+    "@moriajs/renderer": "0.4.12",
+    "@moriajs/ui": "0.4.12",
+    "dotenv": "^17.3.1",
+    "mithril": "^2.3.8",
+    "mongodb": "^6.10.0"
+  },
+  "devDependencies": {
+    "@moriajs/cli": "0.4.12",
+    "@types/mithril": "^2.2.7",
+    "@types/node": "^22.0.0",
+    "fastify": "^5.0.0",
+    "@fastify/cookie": "^11.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
   }
 }
