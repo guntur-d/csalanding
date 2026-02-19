@@ -17,7 +17,6 @@ const projectRoot = process.cwd();
 
 /**
  * Singleton Initialization Promise
- * Uses globalThis to persist across hot-reloads in Vercel Dev.
  */
 let initPromise: Promise<any> | null = (globalThis as any)._MORIA_INIT_PROMISE || null;
 
@@ -31,9 +30,9 @@ export async function initApp() {
         const app = await createApp({
             config: {
                 ...config,
-                database: undefined, // Manual registration below
+                database: undefined, // Manual
                 auth: undefined,
-                routes: undefined,   // Disable auto-registration to avoid conflicts/double-loading
+                routes: undefined,   // Manual
                 mode: isProd ? 'production' : 'development',
                 rootDir: projectRoot,
             },
@@ -87,15 +86,12 @@ export async function initApp() {
                 if (!payload.includes('styles.css')) {
                     headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
                 }
-                // Try to find hashed entry-client.js
-                if (!payload.includes('entry-client.js')) {
-                    const assetsDir = path.join(clientDir, 'assets');
-                    if (fs.existsSync(assetsDir)) {
-                        const files = fs.readdirSync(assetsDir);
-                        const entryFile = files.find(f => f.startsWith('index-') && f.endsWith('.js'));
-                        if (entryFile) {
-                            headInjection += `    <script type="module" src="/assets/${entryFile}"></script>\n`;
-                        }
+                const assetsDir = path.join(clientDir, 'assets');
+                if (fs.existsSync(assetsDir)) {
+                    const files = fs.readdirSync(assetsDir);
+                    const entryFile = files.find(f => f.startsWith('index-') && f.endsWith('.js'));
+                    if (entryFile) {
+                        headInjection += `    <script type="module" src="/dist/client/assets/${entryFile}"></script>\n`;
                     }
                 }
                 if (headInjection) {
@@ -118,26 +114,66 @@ export async function initApp() {
             } as any));
         }
 
-        // 4. Register file-based routes
-        const routesDir = path.resolve(projectRoot, config.routes?.dir ?? 'src/routes');
-        if (fs.existsSync(routesDir)) {
-            console.log(`[Vercel] Scanning routes in ${routesDir}`);
-            await registerRoutes(app.server, routesDir, {
-                mode: isProd ? 'production' : 'development',
-                config,
-                vite: undefined
-            });
+        // 4. Robust Route Registration
+        // Try multiple locations for routes since Vercel's bundling can move them
+        const searchPaths = [
+            path.resolve(projectRoot, config.routes?.dir ?? 'src/routes'),
+            path.resolve(__dirname, 'routes'),
+            path.resolve(__dirname, '../src/routes'),
+            path.resolve(__dirname, '..', 'src', 'routes')
+        ];
+
+        let foundRoutes = false;
+        for (const routesDir of searchPaths) {
+            if (fs.existsSync(routesDir)) {
+                console.log(`[Vercel] Found routes at: ${routesDir}`);
+                await registerRoutes(app.server, routesDir, {
+                    mode: isProd ? 'production' : 'development',
+                    config,
+                    vite: undefined
+                });
+                foundRoutes = true;
+                break;
+            }
+        }
+
+        if (!foundRoutes) {
+            console.error(`[Vercel] CRITICAL: No routes directory found in: ${searchPaths.join(', ')}`);
         }
 
         // Diagnostic route
-        app.server.get('/vercel-debug', async () => ({
-            timestamp: new Date().toISOString(),
-            isProd,
-            env: process.env.NODE_ENV,
-            cwd: process.cwd(),
-            routesDirExists: fs.existsSync(routesDir),
-            routes: app.server.printRoutes()
-        }));
+        app.server.get('/vercel-debug', async () => {
+            const listFiles = (dir: string, depth = 0): string[] => {
+                if (depth > 2 || !fs.existsSync(dir)) return [];
+                const files = fs.readdirSync(dir);
+                let res: string[] = [];
+                for (const f of files) {
+                    const p = path.join(dir, f);
+                    try {
+                        const stat = fs.statSync(p);
+                        if (stat.isDirectory()) {
+                            res.push(`DIR: ${p}`);
+                            res = res.concat(listFiles(p, depth + 1));
+                        } else {
+                            res.push(`FILE: ${p}`);
+                        }
+                    } catch (e) { res.push(`ERROR: ${p}`); }
+                }
+                return res;
+            };
+
+            return {
+                timestamp: new Date().toISOString(),
+                isProd,
+                env: process.env.NODE_ENV,
+                cwd: process.cwd(),
+                dirname: __dirname,
+                searchPaths,
+                foundRoutes,
+                fsRoot: listFiles(projectRoot),
+                routes: app.server.printRoutes()
+            };
+        });
 
         await app.server.ready();
         return app;
@@ -160,7 +196,6 @@ if (!isVercelRuntime) {
         const port = config.server?.port || 3001;
         const host = config.server?.host || '0.0.0.0';
         try {
-            console.log(`[Moria] Environment: Non-Vercel. Listening on ${port}`);
             const addr = await instance.server.listen({ port, host });
             console.log(`[Moria] Local Standalone Server: ${addr}`);
         } catch (err: any) {
@@ -176,11 +211,10 @@ if (!isVercelRuntime) {
 export default async (req: any, res: any) => {
     try {
         const instance = await initApp();
-        // Fastify 5 Bridge
         instance.server.server.emit('request', req, res);
     } catch (e: any) {
         console.error('[Vercel] Handler Crash:', e);
         res.statusCode = 500;
-        res.end(JSON.stringify({ error: e.message }));
+        res.end(JSON.stringify({ error: e.message, stack: e.stack }));
     }
 };
