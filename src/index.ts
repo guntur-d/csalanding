@@ -1,6 +1,8 @@
 import 'fastify';
-import { createApp } from '@moriajs/core';
+import { createApp, registerRoutes } from '@moriajs/core';
 import config from '../moria.config.js';
+import path from 'node:path';
+import fs from 'node:fs';
 
 let app: any;
 
@@ -21,6 +23,20 @@ export async function initApp() {
             }
         }
     });
+
+    // Manually register routes (deferred in listen() by default)
+    const routesDir = path.resolve(process.cwd(), config.routes?.dir ?? 'src/routes');
+    if (fs.existsSync(routesDir)) {
+        console.log(`[Vercel] Registering routes from: ${routesDir}`);
+        await registerRoutes(app.server, routesDir, {
+            mode: 'production',
+            config,
+            vite: undefined
+        });
+    } else {
+        console.warn(`[Vercel] Routes directory NOT FOUND: ${routesDir}`);
+    }
+
     await app.server.ready();
     return app;
 }
