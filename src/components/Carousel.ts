@@ -26,7 +26,7 @@ export const Carousel = {
             return null;
         }
 
-        return m(".carousel-container", [
+        const children: any[] = [
             // Track containing all slides
             m(".carousel-track", {
                 style: `transform: translateX(-${currentIdx * 100}%)`
@@ -34,34 +34,42 @@ export const Carousel = {
                 m(".carousel-slide", [
                     m(".slide-img", { style: `background-image: url('${img}')` })
                 ])
-            )),
+            ))
+        ];
 
-            // Navigation Arrows (only show if more than 1 image)
-            images.length > 1 ? [
+        // Controls (only show if more than 1 image)
+        if (images.length > 1) {
+            children.push(
                 m("button.carousel-nav-btn.prev", {
                     onclick: (e: any) => {
                         e.stopPropagation();
                         vnode.state.prev();
                     }
-                }, "❮"),
+                }, "❮")
+            );
+
+            children.push(
                 m("button.carousel-nav-btn.next", {
                     onclick: (e: any) => {
                         e.stopPropagation();
                         vnode.state.next();
                     }
                 }, "❯")
-            ] : null,
+            );
 
-            // Indicator Dots
-            images.length > 1 ? m(".carousel-indicators", images.map((_: any, idx: number) =>
-                m("button.carousel-dot", {
-                    class: idx === currentIdx ? 'active' : '',
-                    onclick: (e: any) => {
-                        e.stopPropagation();
-                        vnode.state.goTo(idx);
-                    }
-                })
-            )) : null
-        ]);
+            children.push(
+                m(".carousel-indicators", images.map((_: any, idx: number) =>
+                    m("button.carousel-dot", {
+                        class: idx === currentIdx ? 'active' : '',
+                        onclick: (e: any) => {
+                            e.stopPropagation();
+                            vnode.state.goTo(idx);
+                        }
+                    })
+                ))
+            );
+        }
+
+        return m(".carousel-container", children);
     }
 };

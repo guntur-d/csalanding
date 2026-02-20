@@ -55,10 +55,10 @@ export const Projects = {
                     m(".video-grid", videos.map((urlOrId: string) => {
                         const id = getYoutubeId(urlOrId);
                         if (!id) return null;
-                        return m(".video-container", { key: id }, [
+                        return m(".video-container", [
                             m.trust(`<iframe src="https://www.youtube.com/embed/${id}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`)
                         ])
-                    }))
+                    }).filter(Boolean))
                 ]);
             }))
         ]);
