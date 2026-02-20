@@ -100,11 +100,14 @@ export default {
     },
 
     uploadImage: async function (vnode: any, projectIdx: number, file: File) {
+        console.log("[Moria-Admin] uploadImage called for project", projectIdx, "file", file.name);
         toast.info(`Uploading ${file.name}...`);
         const reader = new FileReader();
         reader.onload = async () => {
+            console.log("[Moria-Admin] FileReader.onload triggered");
             const base64 = (reader.result as string).split(',')[1];
             try {
+                console.log("[Moria-Admin] Requesting POST /api/media...");
                 const response: any = await m.request({
                     method: 'POST',
                     url: '/api/media',
@@ -114,6 +117,7 @@ export default {
                         data: base64
                     }
                 });
+                console.log("[Moria-Admin] Response received:", response);
                 if (response.success) {
                     const projects = vnode.state.content.projects.list;
                     if (!projects[projectIdx].images) projects[projectIdx].images = [];
@@ -334,7 +338,9 @@ export default {
                                         style: "display: none;",
                                         onchange: (e: any) => {
                                             const file = e.target.files[0];
+                                            console.log("[Moria-Admin] input.onchange. File selected:", file?.name);
                                             if (file) this.uploadImage(vnode, pIdx, file);
+                                            else console.warn("[Moria-Admin] No file selected in onchange");
                                         }
                                     })
                                 ])

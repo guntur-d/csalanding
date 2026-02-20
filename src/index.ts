@@ -95,16 +95,44 @@ export async function initApp() {
             // 3. Asset Discovery (Sync with hashed Vite assets)
             let discoveredAssets: string[] = [];
             const indexHtmlPath = path.join(contentDir, 'index.html');
+            const manifestPath = path.join(contentDir, '.vite/manifest.json');
+
             if (fs.existsSync(indexHtmlPath)) {
                 try {
                     const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
                     const scripts = indexHtml.match(/<script\b[^>]*?\bsrc=["']\/assets\/[^"']+["'][^>]*>.*?<\/script>/gi) || [];
                     const links = indexHtml.match(/<link\b[^>]*?\bhref=["']\/assets\/[^"']+["'][^>]*>/gi) || [];
                     discoveredAssets = [...scripts, ...links];
-                    console.log(`[Vercel] Discovered ${discoveredAssets.length} production assets.`);
+                    console.log(`[Vercel] Discovered ${discoveredAssets.length} production assets from index.html`);
                 } catch (e) {
-                    console.error('[Vercel] Asset discovery failed:', e);
+                    console.error('[Vercel] Asset discovery from index.html failed:', e);
                 }
+            } else if (fs.existsSync(manifestPath)) {
+                try {
+                    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+                    console.log(`[Vercel] Using manifest for discovery at ${manifestPath}`);
+
+                    // 1. Find Entry Client
+                    const entryPath = config.vite?.clientEntry?.replace(/^\//, '') || 'src/entry-client.ts';
+                    const entry = manifest[entryPath];
+                    if (entry) {
+                        discoveredAssets.push(`<script type="module" src="/${entry.file}"></script>`);
+
+                        // 2. Find Styles (if any)
+                        if (entry.css) {
+                            entry.css.forEach((cssFile: string) => {
+                                discoveredAssets.push(`<link rel="stylesheet" href="/${cssFile}">`);
+                            });
+                        }
+                    } else {
+                        console.warn(`[Vercel] Entry ${entryPath} not found in manifest`);
+                    }
+                    console.log(`[Vercel] Discovered ${discoveredAssets.length} assets from manifest.`);
+                } catch (e) {
+                    console.error('[Vercel] Asset discovery from manifest failed:', e);
+                }
+            } else {
+                console.warn(`[Vercel] No asset discovery source found (searched index.html and manifest.json)`);
             }
 
             // 4. Request Hooks
@@ -129,24 +157,23 @@ export async function initApp() {
                 }
             });
 
-            // C. Asset Injection (Post-rendering)
             // C. Asset Injection Helper
             const injectAssets = (html: string) => {
                 let processedPayload = html;
 
-                // Cleanup broken defaults
-                processedPayload = processedPayload.replace(/<script[^>]+src="\/assets\/entry-client\.js"[^>]*><\/script>/gi, '');
-
                 // Inject discovered assets
                 let headInjection = '';
                 if (discoveredAssets.length > 0) {
+                    // Cleanup broken defaults only if we have replacements
+                    processedPayload = processedPayload.replace(/<script[^>]+src="\/assets\/entry-client\.js"[^>]*><\/script>/gi, '');
                     // Remove duplicate links if any
                     processedPayload = processedPayload.replace(/<link[^>]+href="\/assets\/[^"]+"[^>]*>/gi, '');
                     headInjection += '    ' + discoveredAssets.join('\n    ') + '\n';
                 }
 
-                // Styles.css fallback
-                if (!processedPayload.includes('styles.css') && !headInjection.includes('styles.css')) {
+                // Styles.css fallback if not found in discovered assets
+                const hasStyles = processedPayload.includes('styles.css') || headInjection.includes('styles.css') || discoveredAssets.some(a => a.includes('.css'));
+                if (!hasStyles) {
                     headInjection += '    <link rel="stylesheet" href="/styles.css">\n';
                 }
 

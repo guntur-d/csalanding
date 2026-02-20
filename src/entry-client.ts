@@ -48,6 +48,17 @@ for (const [key, loader] of routes) {
 
 console.log("[ROUTING] Global pages:", Object.keys(pages));
 
+if (typeof window !== 'undefined') {
+    window.addEventListener('error', (e) => console.error('[GLOBAL ERROR]', e));
+    window.addEventListener('unhandledrejection', (e) => console.error('[UNHANDLED REJECTION]', e));
+}
+
 (async () => {
-    await bootstrap(pages as any);
+    console.log("[MoriaJS] Bootstrapping client...");
+    try {
+        await bootstrap(pages as any);
+        console.log("[MoriaJS] Hydration check complete");
+    } catch (e) {
+        console.error("[MoriaJS] Hydration failed at root:", e);
+    }
 })();
