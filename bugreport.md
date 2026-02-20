@@ -310,3 +310,39 @@ if (config.auth) {
   }
   ```
 - **Recommended Framework Fix**: The `build` command in `@moriajs/cli` could strip leading slashes or explicitly use `path.join` with `process.cwd()` to normalize absolute vs relative paths uniformly across OSs.
+
+---
+
+## ❌ UNRESOLVED: 16. Hydration Hijacking (Ambiguous Path Matching)
+
+### Description
+The `@moriajs/renderer` package uses a broad `.endsWith()` check in its `bootstrap()` function to match the server-provided `_moria_page` identifier to the client-side component registry.
+
+This causes "hijacking" when multiple pages share the same filename (e.g., `index.js` and `admin/index.js`). If the server identifies the root page as `index.js`, the binder might incorrectly pick `admin/index.js` if it appears in the registry keys, resulting in the Admin UI overwriting the Home Page during hydration.
+
+### Impact
+- Incorrect components are mounted on the client.
+- Security risk (admin UI elements appearing on public pages, though data is still protected by API auth).
+- Broken navigation flow (e.g., logout redirecting to home but showing admin UI).
+
+### Affected Files
+- `node_modules/@moriajs/renderer/src/index.ts` (bootstrap function)
+
+### Steps to Reproduce
+1. Create `src/routes/index.ts` and `src/routes/admin/index.ts`.
+2. Manual register both with identifiers `index.js` and `admin/index.js`.
+3. Load the root page `/`.
+4. Observe that the Admin UI is rendered after hydration.
+
+### Proposed Fix
+The framework should prioritize exact matches and/or sort registry keys by length to ensure the most specific/shallow match is chosen first.
+
+```typescript
+// Proposed fix in renderer/src/index.ts
+const matchingKey = Object.keys(pages)
+    .sort((a, b) => a.length - b.length) // Shortest match first
+    .find(key => key.endsWith(pagePath));
+```
+
+### Workaround
+Ensure all `_moria_page` identifiers passed from the server are unique and specific, including parent directory names even for root files.
