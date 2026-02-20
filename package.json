@@ -11,11 +11,11 @@
   "dependencies": {
     "@fastify/cookie": "^11.0.0",
     "@fastify/static": "^9.0.0",
-    "@moriajs/auth": "0.4.14",
-    "@moriajs/core": "0.4.14",
-    "@moriajs/db": "0.4.14",
-    "@moriajs/renderer": "0.4.14",
-    "@moriajs/ui": "0.4.14",
+    "@moriajs/auth": "0.4.16",
+    "@moriajs/core": "0.4.16",
+    "@moriajs/db": "0.4.16",
+    "@moriajs/renderer": "0.4.16",
+    "@moriajs/ui": "0.4.16",
     "dotenv": "^17.3.1",
     "fastify": "5.6.1",
     "mithril": "^2.3.8",
@@ -23,7 +23,7 @@
     "mongodb": "^6.10.0"
   },
   "devDependencies": {
-    "@moriajs/cli": "0.4.14",
+    "@moriajs/cli": "0.4.16",
     "@types/mithril": "^2.2.7",
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0",
