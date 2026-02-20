@@ -17,6 +17,9 @@ import AdminMiddleware from './routes/admin/_middleware.js';
 import * as ContentApi from './routes/api/content.js';
 import * as AuthLoginApi from './routes/api/auth/login.js';
 import * as InquiryApi from './routes/api/inquiry.js';
+import * as AuthLogoutApi from './routes/api/auth/logout.js';
+import * as MediaApi from './routes/api/media/index.js';
+import * as MediaIdApi from './routes/api/media/[id].js';
 
 // Fix for dependencies missed by Vercel NFT bundler
 import 'mithril-node-render';
@@ -234,6 +237,11 @@ export async function initApp() {
             // Inquiry API
             app.server.post('/api/inquiry', InquiryApi.POST);
             app.server.get('/api/inquiry', InquiryApi.GET);
+
+            // Media & Auth Extension
+            app.server.post('/api/auth/logout', AuthLogoutApi.POST);
+            app.server.post('/api/media', MediaApi.POST);
+            app.server.get('/api/media/:id', MediaIdApi.GET);
 
 
             // Diagnostic route

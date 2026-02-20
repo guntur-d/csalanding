@@ -12,7 +12,7 @@
     "isDynamicEntry": true
   },
   "src/entry-client.ts": {
-    "file": "assets/entry-client-RJhkvNq_.js",
+    "file": "assets/entry-client-qNTVSRWl.js",
     "name": "entry-client",
     "src": "src/entry-client.ts",
     "isEntry": true,
@@ -24,7 +24,7 @@
     ]
   },
   "src/routes/admin/index.ts": {
-    "file": "assets/index-DBoFsPjF.js",
+    "file": "assets/index-CdHWZruC.js",
     "name": "index",
     "src": "src/routes/admin/index.ts",
     "isDynamicEntry": true,
@@ -44,7 +44,7 @@
     ]
   },
   "src/routes/index.ts": {
-    "file": "assets/index-_Dxrh9VM.js",
+    "file": "assets/index-DuGocxDQ.js",
     "name": "index",
     "src": "src/routes/index.ts",
     "isDynamicEntry": true,

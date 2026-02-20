@@ -6,6 +6,7 @@ export default defineConfig({
     server: {
         port: 3000,
         host: '0.0.0.0',
+        bodyLimit: 20971520, // 20MB
     },
     database: {
         adapter: 'mongo',
@@ -18,6 +19,6 @@ export default defineConfig({
         cookieName: 'csa_auth',
     },
     vite: {
-        clientEntry: 'src/entry-client.ts',
+        clientEntry: '/src/entry-client.ts',
     }
 });

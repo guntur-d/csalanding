@@ -14,31 +14,39 @@ const globbed = import.meta.glob(['./routes/**/*.{ts,js,mts,mjs}', '!./routes/**
 // e.g. "./routes/pages/admin/index.ts" -> "pages/admin/index.ts"
 // and handles both .ts and .js since the server might report either
 const pages: Record<string, () => Promise<any>> = {};
-for (const [key, loader] of Object.entries(globbed)) {
-    // 1. Standard file path (e.g. "admin/login.ts")
+const routes = Object.entries(globbed).sort((a, b) => b[0].split('/').length - a[0].split('/').length);
+
+for (const [key, loader] of routes) {
     const relativePath = key.replace('./routes/', '');
+    const token = relativePath.replace(/\.(ts|js|mts|mjs)$/, '');
+
+    // Exact file path key (used by hydration)
     pages[relativePath] = loader as any;
 
-    // 2. JS Extension compatibility (e.g. "admin/login.js")
+    // JS alias for TS files
     if (relativePath.endsWith('.ts')) {
         pages[relativePath.replace(/\.ts$/, '.js')] = loader as any;
     }
 
-    // 3. URL-style matching (Critical for path matching against server's _moria_page)
-    // Remove extension
-    const token = relativePath.replace(/\.(ts|js|mts|mjs)$/, ''); // "admin/login", "index"
+    // URL path aliases
+    const urlPath = '/' + token;
+    if (!pages[urlPath]) pages[urlPath] = loader as any;
 
-    // Add exact match (e.g. "/admin/login")
-    pages['/' + token] = loader as any;
-
-    // Add index aliases
     if (token.endsWith('/index')) {
-        const folder = token.replace(/\/index$/, '');
-        pages['/' + folder] = loader as any; // "/admin"
+        const folderPath = '/' + token.replace(/\/index$/, '');
+        if (!pages[folderPath]) {
+            pages[folderPath] = loader as any;
+            console.log(`[ROUTING] Alias ${folderPath} -> ${relativePath}`);
+        }
     } else if (token === 'index') {
-        pages['/'] = loader as any; // "/"
+        if (!pages['/']) {
+            pages['/'] = loader as any;
+            console.log(`[ROUTING] Alias / -> ${relativePath}`);
+        }
     }
 }
+
+console.log("[ROUTING] Global pages:", Object.keys(pages));
 
 (async () => {
     await bootstrap(pages as any);

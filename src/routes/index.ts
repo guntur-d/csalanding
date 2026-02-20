@@ -14,6 +14,7 @@ export async function getServerData(request: any) {
     }
     try {
         const content = await db.findOne('content', { type: 'landing' });
+        request.log.info({ contentFound: !!content }, '[LANDING] getServerData running');
         return { content: content || {} };
     } catch (e) {
         request.log.error(e);
@@ -24,6 +25,7 @@ export async function getServerData(request: any) {
 export default {
     title: 'Chandra Satria Agung',
     view: function (vnode: any) {
+        console.log("[Moria] Rendering LANDING Page");
         // MoriaJS passes getServerData results into attrs.serverData
         const { serverData } = vnode.attrs;
         const content = serverData?.content || {};
