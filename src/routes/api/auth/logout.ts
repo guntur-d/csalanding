@@ -1,9 +1,9 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
 export async function POST(request: FastifyRequest, reply: FastifyReply) {
-    // Aggressively clear everything
-    reply.header('Clear-Site-Data', '"cookies", "storage", "cache"');
+    console.log('[API] Logout triggered. Clearing admin_session cookie.');
 
+    // Clear the session cookie
     reply.setCookie('admin_session', '', {
         path: '/',
         expires: new Date(0),
@@ -13,5 +13,6 @@ export async function POST(request: FastifyRequest, reply: FastifyReply) {
         sameSite: 'lax'
     });
 
+    console.log('[API] Logout cookie cleared. Returning success.');
     return { success: true };
 }

@@ -134,14 +134,17 @@ export default {
     },
 
     logout: async function () {
+        console.log("[Moria-Admin] Initiating Logout...");
         try {
-            await m.request({
+            const res = await m.request({
                 method: 'POST',
                 url: '/api/auth/logout'
             });
+            console.log("[Moria-Admin] Logout API Response:", res);
         } catch (e) {
-            console.error('[CMS] Logout error:', e);
+            console.error('[Moria-Admin] Logout error:', e);
         }
+        console.log("[Moria-Admin] Redirecting to /");
         window.location.href = '/';
     },
 
