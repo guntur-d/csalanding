@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Carousel } from './Carousel.js';
 
 export const Projects = {
     view: function (vnode: any) {
@@ -48,11 +49,7 @@ export const Projects = {
                     ]),
 
                     m("h4", { style: "margin: 3rem 0 1.5rem; color: var(--primary)" }, "Galeri Foto:"),
-                    m(".projects-grid", images.map((img: string) =>
-                        m(".project-card", [
-                            m(".card-img", { style: `background-image: url('${img}')` })
-                        ])
-                    )),
+                    m(Carousel, { images }),
 
                     m("h4", { style: "margin: 3rem 0 1.5rem; color: var(--primary)" }, "Video Showcase:"),
                     m(".video-grid", videos.map((urlOrId: string) => {

@@ -211,6 +211,106 @@ section {
     color: var(--primary);
 }
 
+/* Carousel Additions */
+.carousel-container {
+    position: relative;
+    width: 100%;
+    border-radius: 15px;
+    overflow: hidden;
+    background: var(--bg-card);
+    border: 1px solid var(--glass);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    height: 100%;
+}
+
+.carousel-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 350px;
+    /* Definitive height required for bg-image */
+}
+
+/* On larger screens, allow a taller carousel */
+@media (min-width: 768px) {
+    .carousel-slide {
+        height: 500px;
+    }
+}
+
+.slide-img {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+.carousel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(15, 15, 15, 0.6);
+    backdrop-filter: blur(5px);
+    color: var(--text-main);
+    border: 1px solid var(--glass);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: var(--transition);
+    z-index: 10;
+}
+
+.carousel-nav-btn:hover {
+    background: var(--primary);
+    color: var(--bg-dark);
+}
+
+.carousel-nav-btn.prev {
+    left: 20px;
+}
+
+.carousel-nav-btn.next {
+    right: 20px;
+}
+
+.carousel-indicators {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+.carousel-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.carousel-dot.active {
+    background: var(--primary);
+    transform: scale(1.4);
+}
+
+.carousel-dot:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
+
 /* Video Gallery */
 .video-grid {
     display: grid;

@@ -12,7 +12,7 @@
     "isDynamicEntry": true
   },
   "src/entry-client.ts": {
-    "file": "assets/entry-client-B7flxtrr.js",
+    "file": "assets/entry-client-ChZBgUT-.js",
     "name": "entry-client",
     "src": "src/entry-client.ts",
     "isEntry": true,
@@ -44,7 +44,7 @@
     ]
   },
   "src/routes/index.ts": {
-    "file": "assets/index-DuGocxDQ.js",
+    "file": "assets/index-C3sSBydp.js",
     "name": "index",
     "src": "src/routes/index.ts",
     "isDynamicEntry": true,
