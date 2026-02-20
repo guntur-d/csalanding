@@ -65,6 +65,7 @@ export default {
 
     save: async function (vnode: any) {
         vnode.state.saving = true;
+        m.redraw(); // Force UI update to show "SAVING..." state
         try {
             await m.request({
                 method: "POST",
@@ -73,6 +74,7 @@ export default {
             });
             toast.success("Changes saved live!");
         } catch (e) {
+            console.error('[CMS] Save error:', e);
             toast.error("Failed to save changes");
         } finally {
             vnode.state.saving = false;
@@ -150,11 +152,11 @@ export default {
                                     m("th", { style: "padding: 1rem;" }, "Email"),
                                     m("th", { style: "padding: 1rem;" }, "Message")
                                 ])),
-                                m("tbody", inquiries.map((inq: any) => m("tr", { style: "border-bottom: 1px solid #222;" }, [
-                                    m("td", { style: "padding: 1rem; color: #888; white-space: nowrap;" }, new Date(inq.createdAt).toLocaleDateString()),
-                                    m("td", { style: "padding: 1rem; font-weight: 500;" }, inq.fullName),
-                                    m("td", { style: "padding: 1rem;" }, m("a", { href: `mailto:${inq.email}`, style: "color: #c5a059; text-decoration: none;" }, inq.email)),
-                                    m("td", { style: "padding: 1rem; color: #aaa; max-width: 300px;" }, inq.message)
+                                m("tbody", (vnode.state.inquiries || []).map((inq: any, idx: number) => m("tr", { key: inq._id || idx, style: "border-bottom: 1px solid #222;" }, [
+                                    m("td", { style: "padding: 1rem; color: #888; white-space: nowrap;" }, inq.createdAt ? new Date(inq.createdAt).toLocaleDateString() : 'N/A'),
+                                    m("td", { style: "padding: 1rem; font-weight: 500;" }, inq.fullName || 'N/A'),
+                                    m("td", { style: "padding: 1rem;" }, inq.email ? m("a", { href: `mailto:${inq.email}`, style: "color: #c5a059; text-decoration: none;" }, inq.email) : 'N/A'),
+                                    m("td", { style: "padding: 1rem; color: #aaa; max-width: 300px;" }, inq.message || '')
                                 ])))
                             ])
                         )
