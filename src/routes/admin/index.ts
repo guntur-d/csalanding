@@ -21,6 +21,7 @@ export default {
     title: 'CSA Admin - Chandra Satria Agung',
     oninit: function (vnode: any) {
         const { serverData } = vnode.attrs;
+        console.log("[Moria-Admin] oninit. Hydrated:", typeof window !== 'undefined');
         vnode.state.content = serverData?.content || {};
         vnode.state.inquiries = [];
 
@@ -173,7 +174,7 @@ export default {
                     }, "LOGOUT"),
                     m("button", {
                         onclick: () => this.save(vnode),
-                        disabled: saving,
+                        disabled: !!saving,
                         style: `padding: 0.75rem 2.5rem; background: #c5a059; color: #111; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; opacity: ${saving ? 0.5 : 1}`
                     }, saving ? "SAVING..." : "SAVE CHANGES")
                 ])

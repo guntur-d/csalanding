@@ -165,7 +165,7 @@ export async function initApp() {
             } catch (e) { console.error('[Vercel] Plugin failure:', e); }
 
             // Helper for registering Mithril Pages
-            const registerPage = (path: string, componentModule: any, middleware?: any) => {
+            const registerPage = (path: string, componentModule: any, middleware?: any, pageId?: string) => {
                 console.log(`[Vercel] Registering Manual Route: ${path}`, Object.keys(componentModule));
 
                 const handler = async (req: any, reply: any) => {
@@ -196,7 +196,7 @@ export async function initApp() {
                             mode: isProd ? 'production' : 'development',
                             initialData: {
                                 ...data,
-                                _moria_page: path
+                                _moria_page: pageId || path
                             }
                         });
 
@@ -219,9 +219,9 @@ export async function initApp() {
             };
 
             // Register Pages
-            registerPage('/', HomeRoute);
-            registerPage('/admin', AdminRoute, AdminMiddleware);
-            registerPage('/admin/login', AdminLoginRoute);
+            registerPage('/', HomeRoute, undefined, 'index.js');
+            registerPage('/admin', AdminRoute, AdminMiddleware, 'admin/index.js');
+            registerPage('/admin/login', AdminLoginRoute, undefined, 'admin/login.js');
 
             // Simple Test Route
             app.server.get('/vercel-test', async (req, reply) => {
