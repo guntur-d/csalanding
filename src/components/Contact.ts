@@ -57,8 +57,10 @@ export const Contact = {
                                 { name: "Zaki", phone: "08156674422" },
                                 { name: "Budi", phone: "081617321732" },
                                 { name: "Sari", phone: "08989932000" }
-                            ]).map((c: any) => m("p", { style: "margin-bottom: 0.5rem" }, [
-                                m("span", { style: "color: var(--text-muted); width: 60px; display: inline-block;" }, `${c.name}: `),
+                            ]).filter((c: any) => c.name || c.phone).map((c: any) => m("p", {
+                                style: "margin-bottom: 0.5rem; display: flex; align-items: baseline;"
+                            }, [
+                                m("span", { style: "color: var(--text-muted); width: 100px; flex-shrink: 0;" }, `${c.name}: `),
                                 m("a", {
                                     href: `tel:${c.phone}`,
                                     style: "color: var(--primary); font-weight: 600; text-decoration: none;"

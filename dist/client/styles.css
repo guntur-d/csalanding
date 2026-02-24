@@ -71,6 +71,15 @@ nav {
     border-bottom: 1px solid var(--glass);
 }
 
+.nav-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .logo {
     font-size: 1.5rem;
     font-weight: 700;
@@ -80,6 +89,7 @@ nav {
 
 .nav-links {
     display: flex;
+    align-items: center;
     gap: 2rem;
 }
 
@@ -388,14 +398,33 @@ footer {
 }
 
 @media (max-width: 768px) {
+    nav {
+        padding: 1rem 3%;
+    }
+
+    .logo {
+        font-size: 1.1rem;
+        max-width: 150px;
+        line-height: 1.2;
+    }
+
+    .nav-links {
+        gap: 0.8rem;
+    }
+
+    .nav-links a {
+        font-size: 0.85rem;
+    }
+
+    .theme-toggle {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.8rem;
+    }
 
     .about-grid,
     .contact-container {
         grid-template-columns: 1fr;
-    }
-
-    .nav-links {
-        display: none;
     }
 
     .video-grid {

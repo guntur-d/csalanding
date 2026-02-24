@@ -20,9 +20,9 @@ export const Navigation = {
         const isDark = vnode.state.theme === 'dark';
 
         return m("nav", [
-            m(".nav-container", { style: "width: 100%; max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;" }, [
+            m(".nav-container", [
                 m(".logo", "Chandra Satria Agung"),
-                m(".nav-links", { style: "display: flex; align-items: center; gap: 2rem;" }, [
+                m(".nav-links", [
                     m("a[href=#about]", "About"),
                     m("a[href=#projects]", "Projects"),
                     m("a[href=#contact]", "Contact"),
