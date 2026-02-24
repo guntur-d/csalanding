@@ -85,6 +85,14 @@ nav {
     font-weight: 700;
     color: var(--primary);
     text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.logo-img {
+    height: 40px;
+    width: auto;
 }
 
 .nav-links {
@@ -406,6 +414,14 @@ footer {
         font-size: 1.1rem;
         max-width: 150px;
         line-height: 1.2;
+    }
+
+    .logo-text {
+        display: none;
+    }
+
+    .logo-img {
+        height: 35px;
     }
 
     .nav-links {

@@ -21,7 +21,10 @@ export const Navigation = {
 
         return m("nav", [
             m(".nav-container", [
-                m(".logo", "Chandra Satria Agung"),
+                m(".logo", [
+                    m("img.logo-img", { src: "/CSA Glow.png", alt: "CSA Logo" }),
+                    m("span.logo-text", "Chandra Satria Agung")
+                ]),
                 m(".nav-links", [
                     m("a[href=#about]", "About"),
                     m("a[href=#projects]", "Projects"),
