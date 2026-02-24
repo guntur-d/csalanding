@@ -48,6 +48,14 @@ export default {
             }
 
             if (!out.contact) out.contact = {};
+            if (!out.contact.address) out.contact.address = "Jl. Burujul, Desa Rajapolah, Kec. Rajapolah, Kab. Tasikmalaya";
+            if (!out.contact.contacts) out.contact.contacts = [
+                { name: "Zaki", phone: "08156674422" },
+                { name: "Budi", phone: "081617321732" },
+                { name: "Sari", phone: "08989932000" }
+            ];
+            if (!out.contact.hoursWeekday) out.contact.hoursWeekday = "Senin - Sabtu: 09:00 - 17:00";
+            if (!out.contact.hoursWeekend) out.contact.hoursWeekend = "Minggu: Dengan Janji Temu";
             return out;
         };
 
@@ -373,6 +381,71 @@ export default {
                             }, "+ Add Video")
                         ])
                     ]))
+                ]),
+
+                // Contact Information Section
+                m(".admin-card", { style: "background: #1a1a1a; padding: 2rem; border-radius: 15px; border: 1px solid #333; grid-column: 1 / -1;" }, [
+                    m("h2", { style: "color: #c5a059; margin-bottom: 2rem; border-bottom: 1px solid #333; padding-bottom: 1rem;" }, "Contact Section"),
+                    m(".form-row", { style: "display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;" }, [
+                        // Left column: Address and Hours
+                        m("div", [
+                            m(".form-group", { style: "margin-bottom: 1.5rem;" }, [
+                                m("label", { style: "display: block; color: #aaa; margin-bottom: 0.5rem;" }, "Strategic Location (Address)"),
+                                m("textarea", {
+                                    style: "width: 100%; padding: 0.75rem; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px;",
+                                    rows: 2,
+                                    value: content.contact.address || '',
+                                    oninput: (e: any) => content.contact.address = e.target.value
+                                })
+                            ]),
+                            m(".form-group", { style: "margin-bottom: 1.5rem;" }, [
+                                m("label", { style: "display: block; color: #aaa; margin-bottom: 0.5rem;" }, "Visit Hours (Weekday)"),
+                                m("input", {
+                                    style: "width: 100%; padding: 0.75rem; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px;",
+                                    value: content.contact.hoursWeekday || '',
+                                    oninput: (e: any) => content.contact.hoursWeekday = e.target.value
+                                })
+                            ]),
+                            m(".form-group", [
+                                m("label", { style: "display: block; color: #aaa; margin-bottom: 0.5rem;" }, "Visit Hours (Weekend)"),
+                                m("input", {
+                                    style: "width: 100%; padding: 0.75rem; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px;",
+                                    value: content.contact.hoursWeekend || '',
+                                    oninput: (e: any) => content.contact.hoursWeekend = e.target.value
+                                })
+                            ])
+                        ]),
+                        // Right column: Contacts
+                        m("div", [
+                            m("div", { style: "display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;" }, [
+                                m("label", { style: "color: #aaa; margin: 0;" }, "Direct Contacts"),
+                                m("button", {
+                                    onclick: () => content.contact.contacts.push({ name: '', phone: '' }),
+                                    style: "padding: 0.2rem 0.6rem; background: #333; color: #fff; border: 1px solid #444; border-radius: 8px; cursor: pointer; font-size: 0.7rem;"
+                                }, "+ Add Contact")
+                            ]),
+                            (content.contact.contacts || []).map((c: any, cIdx: number) =>
+                                m(".contact-input-group", { key: cIdx, style: "display: flex; gap: 0.5rem; margin-bottom: 0.75rem;" }, [
+                                    m("input", {
+                                        style: "flex: 1; padding: 0.75rem; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px;",
+                                        placeholder: "Name",
+                                        value: c.name || '',
+                                        oninput: (e: any) => c.name = e.target.value
+                                    }),
+                                    m("input", {
+                                        style: "flex: 2; padding: 0.75rem; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px;",
+                                        placeholder: "Phone",
+                                        value: c.phone || '',
+                                        oninput: (e: any) => c.phone = e.target.value
+                                    }),
+                                    m("button", {
+                                        onclick: () => content.contact.contacts.splice(cIdx, 1),
+                                        style: "background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; padding: 0.5rem; cursor: pointer; font-size: 0.7rem;"
+                                    }, "✕")
+                                ])
+                            )
+                        ])
+                    ])
                 ])
             ])
         ]);

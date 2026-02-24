@@ -67,8 +67,8 @@ export const Contact = {
                         ]),
                         m("div", { style: "margin-top: 2.5rem" }, [
                             m("h4", "Visit Hours"),
-                            m("p", { style: "color: var(--text-muted)" }, content.hoursWeekday || "Monday - Saturday: 09:00 - 17:00"),
-                            m("p", { style: "color: var(--text-muted); font-size: 0.9rem;" }, content.hoursWeekend || "Sunday: By Appointment")
+                            m("p", { style: "color: var(--text-muted)" }, content.hoursWeekday || "Senin - Sabtu: 09:00 - 17:00"),
+                            m("p", { style: "color: var(--text-muted); font-size: 0.9rem;" }, content.hoursWeekend || "Minggu: Dengan Janji Temu")
                         ])
                     ]),
                     m(".contact-form", [

@@ -8,8 +8,14 @@ export const About = {
                 m("h2.section-title", content.title || "Quality Living, Trusted Future"),
                 m(".about-grid", [
                     m(".about-text", [
-                        m("p", content.description1 || "PT Chandra Satria Agung (CSA) adalah pengembang properti terkemuka yang berdedikasi untuk menciptakan hunian berkualitas dengan harga yang kompetitif."),
-                        m("p", { style: "margin-top: 1.5rem; color: var(--text-muted); font-size: 0.95rem;" }, content.description2 || "Dengan pengalaman bertahun-tahun di industri real estate, kami terus berinovasi dalam desain dan spesifikasi bangunan untuk memberikan nilai terbaik bagi konsumen kami."),
+                        (content.description1 || "PT Chandra Satria Agung (CSA) adalah pengembang properti terkemuka yang berdedikasi untuk menciptakan hunian berkualitas dengan harga yang kompetitif.")
+                            .split('\n')
+                            .filter((p: string) => p.trim() !== '')
+                            .map((para: string, idx: number) => m("p", { style: idx > 0 ? "margin-top: 1rem;" : "" }, para)),
+                        (content.description2 || "Dengan pengalaman bertahun-tahun di industri real estate, kami terus berinovasi dalam desain dan spesifikasi bangunan untuk memberikan nilai terbaik bagi konsumen kami.")
+                            .split('\n')
+                            .filter((p: string) => p.trim() !== '')
+                            .map((para: string, idx: number) => m("p", { style: idx === 0 ? "margin-top: 1.5rem; color: var(--text-muted); font-size: 0.95rem;" : "margin-top: 1rem; color: var(--text-muted); font-size: 0.95rem;" }, para)),
                         m("ul", { style: "margin-top: 2rem; list-style: none;" }, (content.features || [
                             "✓ Lokasi Strategis di Pusat Pertumbuhan",
                             "✓ Lingkungan Hijau, Asri & Nyaman",
