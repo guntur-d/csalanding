@@ -9,7 +9,7 @@ export const Hero = {
                 m("h1", content.title || "Membangun Masa Depan Anda"),
                 m("p", content.subtitle || "Hunian Nyaman, Harga Bersahabat! Lokasi Strategis di Rajapolah, Tasikmalaya."),
                 m("button.btn", {
-                    onclick: () => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
+                    onclick: () => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })
                 }, content.buttonText || "Pelajari Selengkapnya")
             ])
         ]);
