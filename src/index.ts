@@ -182,7 +182,7 @@ export async function initApp() {
     <script>
       window.CHATBOT_CLIENT_ID = "3";
       window.CHATBOT_API_KEY = "client_u01a4n03u8gj4rzc0kguf";
-      window.CHATBOT_TITLE = "CSA Assistant";
+      window.CHATBOT_TITLE = "Ngobrol dengan Wulan";
     </script>
     <script src="https://siti.solusiti.com/widget.js"></script>
 `);
