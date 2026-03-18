@@ -1,0 +1,27 @@
+{
+    "version": 2,
+    "rewrites": [
+        {
+            "source": "/assets/(.*)",
+            "destination": "/api/index"
+        },
+        {
+            "source": "/public/(.*)",
+            "destination": "/public/$1"
+        },
+        {
+            "source": "/styles.css",
+            "destination": "/public/styles.css"
+        },
+        {
+            "source": "/((?!assets/|public/|moria/|_moria/|styles\\.css|favicon\\.ico|.*\\.jpg|.*\\.png|.*\\.pdf).*)",
+            "destination": "/api/index"
+        }
+    ],
+    "functions": {
+        "api/index.ts": {
+            "includeFiles": "{dist,public,src,package.json}/**",
+            "maxDuration": 60
+        }
+    }
+}
