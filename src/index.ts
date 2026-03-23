@@ -178,15 +178,17 @@ export async function initApp() {
                 }
 
                 if (headInjection) {
-                    processedPayload = processedPayload.replace('<head>', '<head>\n' + headInjection + `
-    <script>
-      window.CHATBOT_CLIENT_ID = "3";
-      window.CHATBOT_API_KEY = "client_u01a4n03u8gj4rzc0kguf";
-      window.CHATBOT_TITLE = "Ngobrol dengan Wulan";
-    </script>
-    <script src="https://siti.solusiti.com/widget.js"></script>
-`);
+                    processedPayload = processedPayload.replace('<head>', '<head>\n' + headInjection);
                 }
+
+                // Inject Chatbot Iframe
+                const chatbotIframe = `
+    <iframe src="https://letsiti.work/chat-frame.html?apiKey=client_u01a4n03u8gj4rzc0kguf" 
+            style="position:fixed; bottom:20px; right:20px; width:400px; height:600px; border:none; z-index: 9999;">
+    </iframe>
+`;
+                processedPayload = processedPayload.replace('<body>', '<body>' + chatbotIframe);
+
                 return processedPayload;
             };
 
@@ -208,11 +210,11 @@ export async function initApp() {
                         // CSP Headers
                         const csp = [
                             "default-src 'self' https://www.youtube.com https://youtube.com",
-                            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com https://youtube.com https://siti.solusiti.com https://unpkg.com",
+                            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com https://youtube.com https://letsiti.work https://unpkg.com",
                             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-                            "img-src 'self' data: https://i.ytimg.com https://siti.solusiti.com",
-                            "frame-src 'self' https://www.youtube.com https://youtube.com https://siti.solusiti.com",
-                            "connect-src 'self' ws://localhost:* wss://localhost:* https://siti.solusiti.com",
+                            "img-src 'self' data: https://i.ytimg.com https://letsiti.work",
+                            "frame-src 'self' https://www.youtube.com https://youtube.com https://letsiti.work",
+                            "connect-src 'self' ws://localhost:* wss://localhost:* https://letsiti.work",
                             "font-src 'self' data: https://fonts.gstatic.com"
                         ].join('; ');
                         reply.header('Content-Security-Policy', csp);
